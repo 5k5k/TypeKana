@@ -6,9 +6,7 @@ function init() {
     stage = new createjs.Stage("mCanvas");
     resetCanvasSize();
     resetKanaWidth();
-
     initText();
-
 
     createjs.Ticker.on("tick", tick);
     createjs.Ticker.framerate = fps;
@@ -87,6 +85,13 @@ function tick() {
     for (var i = 0; i < kanas.length; i++) {
         if (kanas[i] != null && kanas[i].getInstance() != null) {
             kanas[i].goNext();
+//            xx
+            if (kanas[i].checkDied()) {
+                kanas[i].destroy();
+                kanas.splice(i, 1);
+                missNum++;
+                miss.text = missText + missNum;
+            }
         }
     }
 
@@ -101,17 +106,20 @@ function tick() {
 
 //    console.log("y " + date.getTime());
     stage.update();
+
+
 }
 
 window.onresize = function () {
     resetCanvasSize();
     resetKanaWidth();
     stage.update();
-}
+};
 
 function resetCanvasSize() {
     document.getElementById("mCanvas").width = document.body.clientWidth;
-    document.getElementById("mCanvas").height = document.body.clientHeight / 2;
+    document.getElementById("mCanvas").height = document.body.clientHeight/10*9;
+//    document.getElementById("mCanvas").height = document.body.clientHeight / 2;
     canvasW = stage.canvas.width;
     canvasH = stage.canvas.height;
 }
@@ -136,15 +144,22 @@ function Kana(name) {
 
     this.getInstance = function () {
         return container;
-    }
+    };
     this.destroy = function () {
         container.removeAllChildren();
         container = null;
-    }
+    };
     this.goNext = function () {
         this.y += this.perStepLength;
         container.y = this.y;
-    }
+    };
+    this.checkDied = function () {
+        if (container.y + kana_d > canvasH) {
+            return true;
+        } else {
+            return false;
+        }
+    };
 
     var container = new createjs.Container();
 //    var circle = new createjs.Shape();
@@ -362,12 +377,12 @@ function initText() {
     key.y = canvasH - keyTextSize;
     stage.addChild(key);
 
-    great = new createjs.Text(greatText, "bold " + keyTextSize + "px Arial", "#000000");
+    great = new createjs.Text(greatText + greatNum, "bold " + keyTextSize + "px Arial", "#000000");
     great.x = greatX;
     great.y = canvasH - keyTextSize;
     stage.addChild(great);
 
-    miss = new createjs.Text(missText, "bold " + keyTextSize + "px Arial", "#000000");
+    miss = new createjs.Text(missText + missNum, "bold " + keyTextSize + "px Arial", "#000000");
     miss.x = missX;
     miss.y = canvasH - keyTextSize;
     stage.addChild(miss);
