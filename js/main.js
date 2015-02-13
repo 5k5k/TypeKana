@@ -96,8 +96,8 @@ function drawMenu() {
         container.addChild(text);
         container.x = (canvasW - oneItemWidth) / 2;
         container.y = (i + 1) * oneItemHeight;
-        container.name = i;
-        console.log("        container.name " + container.name);
+        //container.name = i;
+        //console.log("        container.name " + container.name);
 
         menuItemContainers.push(container);
         stage.addChild(container);
@@ -123,7 +123,6 @@ function drawMenu() {
                 }
             })(i)
         );
-
     }
 
     version = new createjs.Text(versionText, "bold " + menuItemTextSize / 2 + "px 楷体", menuItemTextColor);
@@ -137,14 +136,111 @@ function drawLevels() {
 
 }
 
+var freedomItemWidth, freedomItemHeight;
+var dataArea = [true, true, false, false, false, false];//五十平，五十片，浊平，浊片，拗平，拗片
+var freedomItems = ["正/平", "正/片", "浊/平", "浊/片", "拗/平", "拗/片"];
+var freedomItemTextSize;
+var freedomMItems = ["开始", "范围", "速度", "间隔"];
+var freedomMContainers;
+
 function drawFreedom() {
     stage.removeAllChildren();
-    window.addEventListener("click", function (e) {
-        state = inGameScreen;
-        drawInGame();
-    });
+    //window.addEventListener("click", handleFreedom);
+    freedomItemContainers = new Array();
+    freedomMContainers = new Array();
+    if (canvasW > canvasH / 4 * 3) {//横版
+        var virtulWidth = canvasW > freedomMaxWidth ? freedomMaxWidth : canvasW;
+        virtulWidth = virtulWidth > canvasH / 3 * 4 ? canvasH / 3 * 4 : virtulWidth;
 
+        freedomItemWidth = virtulWidth * 0.8 / 4;
+        freedomItemHeight = canvasH * 0.4 - 2 * virtulWidth * 0.1;
+        freedomItemTextSize = freedomItemHeight * 0.625 / 3;
+        for (var i = 0; i < 6; i++) {
+
+            var container = new createjs.Container();
+            var shape = new createjs.Shape();
+            shape.graphics.beginFill(getFreedomItemBGColor(dataArea[i])).drawRect(freedomItemWidth / 10, 0, freedomItemWidth / 5 * 4, freedomItemHeight * 0.625);
+            shape.shadow = new createjs.Shadow("#454", 0, 5, 4);
+
+            var text = new createjs.Text(freedomItems[i], "bold " + freedomItemTextSize + "px 楷体", freedomItemTextColor);
+            text.x = freedomItemWidth / 2 - freedomItemTextSize * 1.25;
+            text.y = freedomItemTextSize;
+
+            container.addChild(shape);
+            container.addChild(text);
+            container.x = (Math.floor(i / 2) + 1) * freedomItemWidth + virtulWidth * 0.1 + (canvasW - virtulWidth) / 2;
+            container.y = i % 2 * freedomItemHeight + virtulWidth * 0.1;
+
+            freedomItemContainers.push(container);
+            stage.addChild(container);
+
+            container.addEventListener("click", (function (num) {
+                    return function (event) {
+                        var flag = false;
+                        for (var j = 0; j < dataArea.length; j++) {
+                            if (dataArea[j] && j != num) {
+                                flag = true;
+                            }
+                        }
+                        if (!flag) {
+                            return;
+                        }
+                        dataArea[num] ? dataArea[num] = false : dataArea[num] = true;
+                        freedomItemContainers[num].getChildAt(0).graphics.beginFill(getFreedomItemBGColor(dataArea[num]))
+                            .drawRect(freedomItemWidth / 10, 0, freedomItemWidth / 5 * 4, freedomItemHeight * 0.625);
+                        stage.update();
+                    }
+                })(i)
+            );
+        }
+
+        var startText = new createjs.Text(freedomMItems[0], "bold " + freedomItemTextSize + "px 楷体", freedomItemTextColor);
+        startText.x = freedomItemWidth * 1.5 / 2 - freedomItemTextSize;
+        startText.y = freedomItemTextSize;
+        var startShape = new createjs.Shape();
+        startShape.graphics.beginFill(freedomStartBGColor).drawRoundRect(0, 0, freedomItemWidth * 1.5, freedomItemHeight * 0.625, freedomItemHeight / 4);
+        startShape.shadow = new createjs.Shadow("#454", 0, 5, 4);
+        var startContainer = new createjs.Container();
+        startContainer.addChild(startShape);
+        startContainer.addChild(startText);
+        startContainer.x = canvasW / 2 - freedomItemWidth * 1.5 / 2;
+        startContainer.y = canvasH * 0.8 ;//+ (canvasH * 0.2 - freedomItemHeight * 0.625) / 2
+        stage.addChild(startContainer);
+
+        startContainer.addEventListener("click", function (e) {
+            resetChooseMap();
+            stage.removeAllChildren();
+            state = inGameScreen;
+            drawInGame();
+        });
+        freedomMContainers.push(startContainer);
+
+        freedomAddMContainersToScreen(virtulWidth * 0.1 + (canvasW - virtulWidth) / 2, virtulWidth * 0.1, freedomMItems[1]);
+        freedomAddMContainersToScreen(virtulWidth * 0.1 + (canvasW - virtulWidth) / 2, canvasH * 0.4 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2, freedomMItems[2]);
+        freedomAddMContainersToScreen(virtulWidth * 0.1 + (canvasW - virtulWidth) / 2, canvasH * 0.6 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2, freedomMItems[3]);
+
+    } else {//竖版
+
+    }
     stage.update();
+}
+
+function freedomAddMContainersToScreen(x, y, textContent) {
+    var text = new createjs.Text(textContent, "bold " + freedomItemTextSize + "px 楷体", freedomItemTextColor);
+    text.x = freedomItemWidth / 2 - freedomItemTextSize;
+    text.y = freedomItemTextSize;
+    var container = new createjs.Container();
+    container.addChild(text);
+    container.x = x;
+    container.y = y;
+    stage.addChild(container);
+    freedomMContainers.push(container);
+}
+
+function handleFreedom(e) {
+    state = inGameScreen;
+    //window.removeEventListener("click", handleFreedom);
+    drawInGame();
 }
 
 function drawInGame() {
@@ -166,7 +262,8 @@ function tick(event) {
         //        console.log(hiragana[getRandom(hiragana.length)]);
 
         //        console.log(canvasH + " " + kana_d);
-        var kana = new Kana(hiragana[getRandom(hiragana.length)]);
+        var kana = new Kana(chooseMap.keys[getRandom(chooseMap.size())]);
+        //var kana = new Kana(chooseKana[getRandom(chooseKana.length)]);
         kanas[kanas.length] = kana;
         stage.addChild(kana.getInstance());
     }
@@ -259,7 +356,7 @@ function resetKanaWidth() {
 //Kana类
 function Kana(name) {
     this.name = name;
-    this.x = getRandom(canvasW - kana_d);
+    this.x = getRandom(canvasW - kana_d * 2);//*2兼容拗音
     this.y = -kana_d;
     this.speed = 10;//经过几秒会落到底部
     this.perStepLength = canvasH / this.speed / fps;
@@ -296,36 +393,6 @@ function Kana(name) {
     container.addChild(text);
     container.x = this.x;
     container.y = this.y;
-}
-
-function Map() {
-    this.keys = new Array();
-    this.data = new Array();
-    //添加键值对
-    this.set = function (key, value) {
-        if (this.data[key] == null) {//如键不存在则身【键】数组添加键名
-            //            this.keys.push(key);
-            this.keys.push(value);
-        }
-        this.data[key] = value;//给键赋值
-    };
-    //获取键对应的值
-    this.get = function (key) {
-        return this.data[key];
-    };
-    //去除键值，(去除键数据中的键名及对应的值)
-    this.remove = function (key) {
-        this.keys.remove(key);
-        this.data[key] = null;
-    };
-    //判断键值元素是否为空
-    this.isEmpty = function () {
-        return this.keys.length == 0;
-    };
-    //获取键值元素大小
-    this.size = function () {
-        return this.keys.length;
-    };
 }
 
 function initData() {
@@ -389,33 +456,33 @@ function initData() {
 
     hiraganaMap.set("ん", [[78, 78]]);//nn
 
-    hiragana = [
-        "あ", "い", "う", "え", "お",
-        "か", "き", "く", "け", "こ",
-        "さ", "し", "す", "せ", "そ",
-        "た", "ち", "つ", "て", "と",
-        "な", "に", "ぬ", "ね", "の",
-        "は", "ひ", "ふ", "へ", "ほ",
-        "ま", "み", "む", "め", "も",
-        "や", "ゆ", "よ",
-        "ら", "り", "る", "れ", "ろ",
-        "わ", "を",
-        "ん"
-    ];
+    //hiragana = [
+    //    "あ", "い", "う", "え", "お",
+    //    "か", "き", "く", "け", "こ",
+    //    "さ", "し", "す", "せ", "そ",
+    //    "た", "ち", "つ", "て", "と",
+    //    "な", "に", "ぬ", "ね", "の",
+    //    "は", "ひ", "ふ", "へ", "ほ",
+    //    "ま", "み", "む", "め", "も",
+    //    "や", "ゆ", "よ",
+    //    "ら", "り", "る", "れ", "ろ",
+    //    "わ", "を",
+    //    "ん"
+    //];
 
-    katakana = [
-        "ア", "イ", "ウ", "エ", "オ",
-        "カ", "キ", "ク", "ケ", "コ",
-        "サ", "シ", "ス", "セ", "ソ",
-        "タ", "チ", "ツ", "テ", "ト",
-        "ナ", "ニ", "ヌ", "ネ", "ノ",
-        "ハ", "ヒ", "フ", "ヘ", "ホ",
-        "マ", "ミ", "ム", "メ", "モ",
-        "ヤ", "ユ", "ヨ",
-        "ラ", "リ", "ル", "レ", "ロ",
-        "ワ", "ヲ",
-        "ン"
-    ];
+    //katakana = [
+    //    "ア", "イ", "ウ", "エ", "オ",
+    //    "カ", "キ", "ク", "ケ", "コ",
+    //    "サ", "シ", "ス", "セ", "ソ",
+    //    "タ", "チ", "ツ", "テ", "ト",
+    //    "ナ", "ニ", "ヌ", "ネ", "ノ",
+    //    "ハ", "ヒ", "フ", "ヘ", "ホ",
+    //    "マ", "ミ", "ム", "メ", "モ",
+    //    "ヤ", "ユ", "ヨ",
+    //    "ラ", "リ", "ル", "レ", "ロ",
+    //    "ワ", "ヲ",
+    //    "ン"
+    //];
 
     katakanaMap = new Map();
     katakanaMap.set("ア", [[65]]);//a
@@ -475,40 +542,211 @@ function initData() {
 
     katakanaMap.set("ン", [[78, 78]]);//nn
 
-    sonant_h = [
-        "が", "ぎ", "ぐ", "げ", "ご",
-        "ざ", "じ", "ず", "ぜ", "ぞ",
-        "だ", "ぢ", "づ", "で", "ど",
-        "ば", "び", "ぶ", "べ", "ぼ",
-        "ぱ", "ぴ", "ぷ", "ぺ", "ぽ"
-    ];
+    //sonant_h = [
+    //    "が", "ぎ", "ぐ", "げ", "ご",
+    //    "ざ", "じ", "ず", "ぜ", "ぞ",
+    //    "だ", "ぢ", "づ", "で", "ど",
+    //    "ば", "び", "ぶ", "べ", "ぼ",
+    //    "ぱ", "ぴ", "ぷ", "ぺ", "ぽ"
+    //];
 
-    sonant_k = [
-        "ガ", "ギ", "グ", "ゲ", "ゴ",
-        "ザ", "ジ", "ズ", "ゼ", "ゾ",
-        "ダ", "ヂ", "ヅ", "デ", "ド",
-        "バ", "ビ", "ブ", "ベ", "ボ",
-        "パ", "ピ", "プ", "ペ", "ポ"
-    ];
+    //sonant_k = [
+    //    "ガ", "ギ", "グ", "ゲ", "ゴ",
+    //    "ザ", "ジ", "ズ", "ゼ", "ゾ",
+    //    "ダ", "ヂ", "ヅ", "デ", "ド",
+    //    "バ", "ビ", "ブ", "ベ", "ボ",
+    //    "パ", "ピ", "プ", "ペ", "ポ"
+    //];
 
-    bendSound_h = [
-        "きゃ", "きゅ", "きょ",
-        "しゃ", "しゅ", "しょ",
-        "ちゃ", "ちゅ", "ちょ",
-        "にゃ", "にゅ", "にょ",
-        "ひゃ", "ひゅ", "ひょ",
-        "みゃ", "みゅ", "みょ",
-        "りゃ", "りゅ", "りょ",
-        "ぎゃ", "ぎゅ", "ぎょ",
-        "じゃ", "じゅ", "じょ",
-        "びゃ", "びゅ", "びょ",
-        "ぴゃ", "ぴゅ", "ぴょ"
-    ];
+    //bendSound_h = [
+    //    "きゃ", "きゅ", "きょ",
+    //    "しゃ", "しゅ", "しょ",
+    //    "ちゃ", "ちゅ", "ちょ",
+    //    "にゃ", "にゅ", "にょ",
+    //    "ひゃ", "ひゅ", "ひょ",
+    //    "みゃ", "みゅ", "みょ",
+    //    "りゃ", "りゅ", "りょ",
+    //    "ぎゃ", "ぎゅ", "ぎょ",
+    //    "じゃ", "じゅ", "じょ",
+    //    "びゃ", "びゅ", "びょ",
+    //    "ぴゃ", "ぴゅ", "ぴょ"
+    //];
+
+    sonantMap_h = new Map();
+    sonantMap_h.set("が", [[71, 65]]);//ga
+    sonantMap_h.set("ぎ", [[71, 73]]);//gi
+    sonantMap_h.set("ぐ", [[71, 85]]);//gu
+    sonantMap_h.set("げ", [[71, 69]]);//ge
+    sonantMap_h.set("ご", [[71, 79]]);//go
+
+    sonantMap_h.set("ざ", [[90, 65]]);//za
+    sonantMap_h.set("じ", [[74, 73]]);//ji
+    sonantMap_h.set("ず", [[90, 85]]);//zu
+    sonantMap_h.set("ぜ", [[90, 69]]);//ze
+    sonantMap_h.set("ぞ", [[90, 79]]);//zo
+
+    sonantMap_h.set("だ", [[68, 65]]);//da
+    sonantMap_h.set("ぢ", [[68, 73]]);//di
+    sonantMap_h.set("づ", [[68, 85]]);//du
+    sonantMap_h.set("で", [[68, 69]]);//de
+    sonantMap_h.set("ど", [[68, 79]]);//do
+
+    sonantMap_h.set("ば", [[66, 65]]);//ba
+    sonantMap_h.set("び", [[66, 73]]);//bi
+    sonantMap_h.set("ぶ", [[66, 85]]);//bu
+    sonantMap_h.set("べ", [[66, 69]]);//be
+    sonantMap_h.set("ぼ", [[66, 79]]);//bo
+
+    sonantMap_h.set("ぽ", [[80, 65]]);//pa
+    sonantMap_h.set("ぴ", [[80, 73]]);//pi
+    sonantMap_h.set("ぷ", [[80, 85]]);//pu
+    sonantMap_h.set("ぺ", [[80, 69]]);//pe
+    sonantMap_h.set("ぽ", [[80, 79]]);//po
+
+    bendSoundMap_h = new Map();
+    bendSoundMap_h.set("きゃ", [[75, 89, 65]]);//kya
+    bendSoundMap_h.set("きゅ", [[75, 89, 85]]);//kyu
+    bendSoundMap_h.set("きょ", [[75, 89, 79]]);//kyo
+
+    bendSoundMap_h.set("しゃ", [[83, 72, 65]]);//sha
+    bendSoundMap_h.set("しゅ", [[83, 72, 85]]);//shu
+    bendSoundMap_h.set("しょ", [[83, 72, 79]]);//sho
+
+    bendSoundMap_h.set("ちゃ", [[67, 72, 65]]);//cha
+    bendSoundMap_h.set("ちゅ", [[67, 72, 85]]);//chu
+    bendSoundMap_h.set("ちょ", [[67, 72, 79]]);//cho
+
+    bendSoundMap_h.set("にゃ", [[78, 89, 65]]);//nya
+    bendSoundMap_h.set("にゅ", [[78, 89, 85]]);//nyu
+    bendSoundMap_h.set("にょ", [[78, 89, 79]]);//nyo
+
+    bendSoundMap_h.set("ひゃ", [[72, 89, 65]]);//hya
+    bendSoundMap_h.set("ひゅ", [[72, 89, 85]]);//hyu
+    bendSoundMap_h.set("ひょ", [[72, 89, 79]]);//hyo
+
+    bendSoundMap_h.set("みゃ", [[77, 89, 65]]);//mya
+    bendSoundMap_h.set("みゅ", [[77, 89, 85]]);//myu
+    bendSoundMap_h.set("みょ", [[77, 89, 79]]);//myo
+
+    bendSoundMap_h.set("りゃ", [[82, 89, 65]]);//rya
+    bendSoundMap_h.set("りゅ", [[82, 89, 85]]);//ryu
+    bendSoundMap_h.set("りょ", [[82, 89, 79]]);//ryo
+
+    bendSoundMap_h.set("ぎゃ", [[71, 89, 65]]);//gya
+    bendSoundMap_h.set("ぎゅ", [[71, 89, 85]]);//gyu
+    bendSoundMap_h.set("ぎょ", [[71, 89, 79]]);//gyo
+
+    bendSoundMap_h.set("じゃ", [[74, 65]]);//ja
+    bendSoundMap_h.set("じゅ", [[74, 85]]);//ju
+    bendSoundMap_h.set("じょ", [[74, 79]]);//yo
+
+    bendSoundMap_h.set("びゃ", [[66, 89, 65]]);//bya
+    bendSoundMap_h.set("びゅ", [[66, 89, 85]]);//byu
+    bendSoundMap_h.set("びょ", [[66, 89, 79]]);//byo
+
+    bendSoundMap_h.set("ぴゃ", [[80, 89, 65]]);//pya
+    bendSoundMap_h.set("ぴゅ", [[80, 89, 85]]);//pyu
+    bendSoundMap_h.set("ぴょ", [[80, 89, 79]]);//pyo
+
+    sonantMap_k = new Map();
+    sonantMap_k.set("ガ", [[71, 65]]);//ga
+    sonantMap_k.set("ギ", [[71, 73]]);//gi
+    sonantMap_k.set("グ", [[71, 85]]);//gu
+    sonantMap_k.set("ゲ", [[71, 69]]);//ge
+    sonantMap_k.set("ゴ", [[71, 79]]);//go
+
+    sonantMap_k.set("ザ", [[90, 65]]);//za
+    sonantMap_k.set("ジ", [[74, 73]]);//ji
+    sonantMap_k.set("ズ", [[90, 85]]);//zu
+    sonantMap_k.set("ゼ", [[90, 69]]);//ze
+    sonantMap_k.set("ゾ", [[90, 79]]);//zo
+
+    sonantMap_k.set("ダ", [[68, 65]]);//da
+    sonantMap_k.set("ヂ", [[68, 73]]);//di
+    sonantMap_k.set("ヅ", [[68, 85]]);//du
+    sonantMap_k.set("デ", [[68, 69]]);//de
+    sonantMap_k.set("ド", [[68, 79]]);//do
+
+    sonantMap_k.set("バ", [[66, 65]]);//ba
+    sonantMap_k.set("ビ", [[66, 73]]);//bi
+    sonantMap_k.set("ブ", [[66, 85]]);//bu
+    sonantMap_k.set("ベ", [[66, 69]]);//be
+    sonantMap_k.set("ボ", [[66, 79]]);//bo
+
+    sonantMap_k.set("パ", [[80, 65]]);//pa
+    sonantMap_k.set("ピ", [[80, 73]]);//pi
+    sonantMap_k.set("プ", [[80, 85]]);//pu
+    sonantMap_k.set("ペ", [[80, 69]]);//pe
+    sonantMap_k.set("ポ", [[80, 79]]);//po
+
+    bendSoundMap_k = new Map();
+    bendSoundMap_k.set("キャ", [[75, 89, 65]]);//kya
+    bendSoundMap_k.set("キュ", [[75, 89, 85]]);//kyu
+    bendSoundMap_k.set("キョ", [[75, 89, 79]]);//kyo
+
+    bendSoundMap_k.set("シャ", [[83, 72, 65]]);//sha
+    bendSoundMap_k.set("シュ", [[83, 72, 85]]);//shu
+    bendSoundMap_k.set("ショ", [[83, 72, 79]]);//sho
+
+    bendSoundMap_k.set("チャ", [[67, 72, 65]]);//cha
+    bendSoundMap_k.set("チュ", [[67, 72, 85]]);//chu
+    bendSoundMap_k.set("チョ", [[67, 72, 79]]);//cho
+
+    bendSoundMap_k.set("ニャ", [[78, 89, 65]]);//nya
+    bendSoundMap_k.set("ニュ", [[78, 89, 85]]);//nyu
+    bendSoundMap_k.set("ニョ", [[78, 89, 79]]);//nyo
+
+    bendSoundMap_k.set("ヒャ", [[72, 89, 65]]);//hya
+    bendSoundMap_k.set("ヒュ", [[72, 89, 85]]);//hyu
+    bendSoundMap_k.set("ヒョ", [[72, 89, 79]]);//hyo
+
+    bendSoundMap_k.set("ミャ", [[77, 89, 65]]);//mya
+    bendSoundMap_k.set("ミュ", [[77, 89, 85]]);//myu
+    bendSoundMap_k.set("ミョ", [[77, 89, 79]]);//myo
+
+    bendSoundMap_k.set("リャ", [[82, 89, 65]]);//rya
+    bendSoundMap_k.set("リュ", [[82, 89, 85]]);//ryu
+    bendSoundMap_k.set("リョ", [[82, 89, 79]]);//ryo
+
+    bendSoundMap_k.set("ギャ", [[71, 89, 65]]);//gya
+    bendSoundMap_k.set("ギュ", [[71, 89, 85]]);//gyu
+    bendSoundMap_k.set("ギョ", [[71, 89, 79]]);//gyo
+
+    bendSoundMap_k.set("ジャ", [[74, 65]]);//ja
+    bendSoundMap_k.set("ジュ", [[74, 85]]);//ju
+    bendSoundMap_k.set("ジョ", [[74, 79]]);//yo
+
+    bendSoundMap_k.set("ビャ", [[66, 89, 65]]);//bya
+    bendSoundMap_k.set("ビュ", [[66, 89, 85]]);//byu
+    bendSoundMap_k.set("ビョ", [[66, 89, 79]]);//byo
+
+    bendSoundMap_k.set("パｙ", [[80, 89, 65]]);//pya
+    bendSoundMap_k.set("ピュ", [[80, 89, 85]]);//pyu
+    bendSoundMap_k.set("ピョ", [[80, 89, 79]]);//pyo
+
+    allMaps = [hiraganaMap, katakanaMap, sonantMap_h, sonantMap_k, bendSoundMap_h, bendSoundMap_k];
 
     keycodes = [-1, -1, -1];
 
-    chooseMap = katakanaMap;
-    chooseKana = katakana;
+    chooseMap = new Map();
+    //chooseMap.keys = katakanaMap.keys.concat(hiraganaMap.keys);
+    //chooseMap.data = katakanaMap.data.concat(hiraganaMap.data);
+    //chooseKana = katakana.concat(hiragana);
+
+    for (var i = 0; i < katakanaMap.keys.length; i++) {
+        chooseMap.set(katakanaMap.keys[i], katakanaMap.get(katakanaMap.keys[i]));
+    }
+
+    for (var i = 0; i < hiraganaMap.keys.length; i++) {
+        chooseMap.set(hiraganaMap.keys[i], hiraganaMap.get(hiraganaMap.keys[i]));
+    }
+
+    //for (var i = 0; i < chooseKana.length; i++) {
+    //    console.log("choose " + chooseKana[i]);
+    //}
+
+    //chooseMap = katakanaMap;
+    //chooseKana = katakana;
     //    chooseMap = hiraganaMap;
     //    chooseKana = hiragana;
 }
@@ -539,6 +777,25 @@ function resetTexts() {
     }
 }
 
+function addMapToChooseMap(map) {
+    for (var i = 0; i < map.keys.length; i++) {
+        chooseMap.set(map.keys[i], map.get(map.keys[i]));
+    }
+}
+
+function resetChooseMap() {
+    chooseMap = new Map();
+    for (var i = 0; i < dataArea.length; i++) {
+        if (dataArea[i]) {
+            addMapToChooseMap(allMaps[i]);
+        }
+    }
+}
+
+function getFreedomItemBGColor(bool) {
+    return bool ? freedomItemBGSelectColor : freedomItemBGUnSelectColor;
+}
+
 function changeKeycodesToChars() {
     var str = "";
     for (var i = keycodes.length - 1; i >= 0; i--) {
@@ -552,6 +809,35 @@ function changeKeycodesToChars() {
 
 function getRandom(length) {
     return Math.floor(Math.random() * length);
+}
+
+function Map() {
+    this.keys = new Array();
+    this.data = new Array();
+
+    this.set = function (key, value) {
+        if (this.data[key] == null) {
+            this.keys.push(key);
+        }
+        this.data[key] = value;
+    };
+
+    this.get = function (key) {
+        return this.data[key];
+    };
+
+    this.remove = function (key) {
+        this.keys.remove(key);
+        this.data[key] = null;
+    };
+
+    this.isEmpty = function () {
+        return this.keys.length == 0;
+    };
+
+    this.size = function () {
+        return this.keys.length;
+    };
 }
 
 var stage, canvasW, canvasH, kana_d, kana_r, kanas;
@@ -577,8 +863,17 @@ var sonantMap_h, sonant_h;//浊音
 var bendSoundMap_h, bendSound_h;//拗音
 var sonantMap_k, sonant_k;//浊音
 var bendSoundMap_k, bendSound_k;//拗音
+var allMaps;
 
-var oneItemMaxWidth = 300;
+//menuScreen
+var oneItemMaxWidth = 300;//menu item max width
 var menuItemBGColor = "#CCFFFF", menuItemTextColor = "#000000";
 var menuItemTextSize, version, versionText = "ver.0.2.0";
 var menuItemContainers;
+
+//freedomScreen
+var freedomItemBGSelectColor = "#00ff00", freedomItemBGUnSelectColor = "#e4eaf2";
+var freedomItemTextColor = "#000000";
+var freedomMaxWidth = 980;
+var freedomItemContainers;
+var freedomStartBGColor = "#ff0033";
