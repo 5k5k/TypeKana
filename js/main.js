@@ -194,6 +194,45 @@ function drawFreedom() {
             );
         }
 
+        var speedContainer = new SelectContainer(virtulWidth * 0.1 + freedomItemWidth * 1.1 + (canvasW - virtulWidth) / 2, canvasH * 0.4 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2 + freedomItemHeight * 0.625 / 4, freedomItemWidth * 3 / 2, freedomItemHeight * 0.625 / 2, 5, 1, 9);
+        stage.addChild(speedContainer.getInstance());
+
+        var intervalContainer = new SelectContainer(virtulWidth * 0.1 + freedomItemWidth * 1.1 + (canvasW - virtulWidth) / 2, canvasH * 0.5 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2 + freedomItemHeight * 0.625 / 4, freedomItemWidth * 3 / 2, freedomItemHeight * 0.625 / 2, 5, 1, 9);
+        stage.addChild(intervalContainer.getInstance());
+
+        var pageContainer = new SelectContainer(canvasW / 2 - freedomItemWidth / 2, canvasH * 0.65 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2 + freedomItemHeight * 0.625 / 4, freedomItemWidth, freedomItemHeight * 0.625 / 2, 1, 1, 2);
+        pageContainer.getInstance().getChildAt(1).addEventListener("click", function (e) {
+            //pageContainer.getInstance().getChildByName("left").addEventListener("click", function (e) {
+            console.log("page1");
+        });
+
+        pageContainer.getInstance().getChildAt(2).addEventListener("click", function (e) {
+            console.log("page2");
+            //stage.removeChild();
+            removePage1();
+            addPage2();
+            stage.update();
+        });
+
+        function removePage1() {
+            stage.removeChild(speedContainer.getInstance());
+            stage.removeChild(intervalContainer.getInstance());
+            for (var i = 0; i < freedomMContainers.length; i++) {
+                stage.removeChild(freedomMContainers[i]);
+            }
+            for (var i = 0; i < freedomItemContainers.length; i++) {
+                stage.removeChild(freedomItemContainers[i]);
+            }
+
+        }
+
+        function addPage2() {
+
+        }
+
+        //left.addEventListener("click", (function (container) {
+        stage.addChild(pageContainer.getInstance());
+
         var startText = new createjs.Text(freedomMItems[0], "bold " + freedomItemTextSize + "px 楷体", freedomItemTextColor);
         startText.x = freedomItemWidth * 1.5 / 2 - freedomItemTextSize;
         startText.y = freedomItemTextSize;
@@ -204,20 +243,27 @@ function drawFreedom() {
         startContainer.addChild(startShape);
         startContainer.addChild(startText);
         startContainer.x = canvasW / 2 - freedomItemWidth * 1.5 / 2;
-        startContainer.y = canvasH * 0.8 ;//+ (canvasH * 0.2 - freedomItemHeight * 0.625) / 2
+        startContainer.y = canvasH * 0.8;//+ (canvasH * 0.2 - freedomItemHeight * 0.625) / 2
         stage.addChild(startContainer);
 
         startContainer.addEventListener("click", function (e) {
+            freedomModeSpeed = 10 - speedContainer.num;
+            appearTime = intervalContainer.num * 500;
             resetChooseMap();
             stage.removeAllChildren();
-            state = inGameScreen;
-            drawInGame();
+            //state = inGameScreen;
+            //drawInGame();
+
+            //console.log("appearTime " + appearTime);
+            //console.log("freedomModeSpeed " + freedomModeSpeed);
+            state = readyScreen;
+            drawReadyScreen();
         });
-        freedomMContainers.push(startContainer);
+        //freedomMContainers.push(startContainer);
 
         freedomAddMContainersToScreen(virtulWidth * 0.1 + (canvasW - virtulWidth) / 2, virtulWidth * 0.1, freedomMItems[1]);
         freedomAddMContainersToScreen(virtulWidth * 0.1 + (canvasW - virtulWidth) / 2, canvasH * 0.4 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2, freedomMItems[2]);
-        freedomAddMContainersToScreen(virtulWidth * 0.1 + (canvasW - virtulWidth) / 2, canvasH * 0.6 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2, freedomMItems[3]);
+        freedomAddMContainersToScreen(virtulWidth * 0.1 + (canvasW - virtulWidth) / 2, canvasH * 0.5 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2, freedomMItems[3]);
 
     } else {//竖版
 
@@ -243,6 +289,59 @@ function handleFreedom(e) {
     drawInGame();
 }
 
+function drawReadyScreen() {
+    stage.removeAllChildren();
+    readyNumY = canvasH / 4 * 3 / 2 / 2;
+    readyNumX = canvasW / 2 - readyNumY / 2;
+
+    readyRandom = readyNumY / 8;
+    readyGoX = canvasW / 2 - readyGoWord.length * readyNumY;
+    readyGoY = readyNumY;
+
+    var text = new createjs.Text(3, "bold " + canvasH / 4 * 3 / 2 + "px 楷体", readyNumColor);
+    text.x = readyNumX;
+    text.y = readyNumY;
+    stage.addChild(text);
+
+    readyListener = createjs.Ticker.on("tick", readyTick);
+    createjs.Ticker.framerate = fps;
+}
+
+function readyTick(event) {
+    if (event.paused) {
+        return;
+    }
+
+    if (3 - Math.floor(createjs.Ticker.getTime(true) / 1000) < 0) {
+        //console.log("go " + Math.floor(createjs.Ticker.getTime(true) / 1000));
+        createjs.Ticker.off("tick", readyListener);
+        stage.removeAllChildren();
+        state = inGameScreen;
+        drawInGame();
+    } else if (3 - Math.floor(createjs.Ticker.getTime(true) / 1000) > 0) {
+        stage.getChildAt(0).text = 3 - Math.floor(createjs.Ticker.getTime(true) / 1000);
+        stage.getChildAt(0).x = readyNumX + getRandom1(readyRandom);
+        stage.getChildAt(0).y = readyNumY + getRandom1(readyRandom);
+    } else {
+        stage.getChildAt(0).text = readyGoWord;
+        stage.getChildAt(0).x = readyGoX;
+        stage.getChildAt(0).y = readyGoY;
+    }
+//    if (3 - Math.floor(createjs.Ticker.getTime(true) / 1000) > 0) {
+//        stage.getChildAt(0).text = 3 - Math.floor(createjs.Ticker.getTime(true) / 1000);
+//    } else {
+//        stage.getChildAt(0).text = readyGoWord;
+//    }
+//
+//    stage.getChildAt(0).x = readyNumX + getRandom1(readyRandom);
+//    stage.getChildAt(0).y = readyNumY + getRandom1(readyRandom);
+//
+//    //3 - Math.floor(createjs.Ticker.getTime(true))
+//}
+
+    stage.update();
+}
+
 function drawInGame() {
     resetKanaWidth();
     initText();
@@ -262,7 +361,15 @@ function tick(event) {
         //        console.log(hiragana[getRandom(hiragana.length)]);
 
         //        console.log(canvasH + " " + kana_d);
-        var kana = new Kana(chooseMap.keys[getRandom(chooseMap.size())]);
+        var kana;
+        if (freedomScreen != 0) {
+            kana = new Kana(chooseMap.keys[getRandom(chooseMap.size())], freedomModeSpeed);
+        } else {
+            kana = new Kana(chooseMap.keys[getRandom(chooseMap.size())]);
+        }
+        //kana= new Kana(chooseMap.keys[getRandom(chooseMap.size())]);
+
+        //kana.speed = freedomModeSpeed;
         //var kana = new Kana(chooseKana[getRandom(chooseKana.length)]);
         kanas[kanas.length] = kana;
         stage.addChild(kana.getInstance());
@@ -301,16 +408,26 @@ function tick(event) {
 
     //    console.log("y " + date.getTime());
     stage.update();
-
 }
 
 window.onresize = function () {
     resetCanvasSize();
     //resetKanaWidth();
     //resetTexts();
-    if (state == inGameScreen) {
+    //if (state == inGameScreen) {
+    //    resetKanaWidth();
+    //    resetTexts();
+    //}
+    switch (state) {
+    case menuScreen:
+        break;
+    case inGameScreen:
         resetKanaWidth();
         resetTexts();
+        break;
+    case freedomScreen:
+        drawFreedom();
+        break;
     }
     stage.update();
 };
@@ -354,11 +471,13 @@ function resetKanaWidth() {
 }
 
 //Kana类
-function Kana(name) {
+function Kana(name, speed) {
     this.name = name;
+    this.speed = 10;//经过几秒会落到底部
     this.x = getRandom(canvasW - kana_d * 2);//*2兼容拗音
     this.y = -kana_d;
-    this.speed = 10;//经过几秒会落到底部
+    isNaN(speed) ? this.speed = 10 : this.speed = speed;
+    console.log("speed " + this.speed);
     this.perStepLength = canvasH / this.speed / fps;
     //        getPerStepLength();
     console.log("create " + name);
@@ -395,6 +514,78 @@ function Kana(name) {
     container.y = this.y;
 }
 
+//左右箭头加数字 类
+function SelectContainer(x, y, width, height, num, min, max) {//container的x坐标，container的y坐标，container的宽，container的高，container中默认显示的数字，显示数字最小值，显示数字最大值
+    this.x = x;
+    this.y = y;
+    this.num = num;
+    this.min = min;
+    this.max = max;
+    this.width = width;
+    this.height = height;
+
+    this.getInstance = function () {
+        return container;
+    };
+
+    this.destroy = function () {
+        container.removeAllChildren();
+        container = null;
+    };
+
+    var container = new createjs.Container();
+    var left = new createjs.Shape();
+    left.graphics.beginFill("red").moveTo(0, height / 2).lineTo(height, 0).lineTo(height, height);
+    var text = new createjs.Text(this.num, "bold " + height + "px Arial", "#000000");
+    text.x = width / 2 - height / 2 / 2 * (num + "").length;
+    text.y = 0;
+    var right = new createjs.Shape();
+    right.graphics.beginFill("red").moveTo(width, height / 2).lineTo(width - height, 0).lineTo(width - height, height);
+    container.addChild(text);
+    container.addChild(left);
+    container.addChild(right);
+
+    left.addEventListener("click", (function (container) {
+            return function (event) {
+                if (container.num > container.min) {
+                    container.num--;
+                    //container.getInstance().removeAllChildren();
+                    container.getInstance().getChildAt(0).text = container.num;
+                    container.getInstance().getChildAt(0).x = container.width / 2 - container.height / 2 / 2 * (container.num + "").length;
+                    //var text = new createjs.Text(container.num, "bold " + height + "px Arial", "#000000");
+                    //text.x = container.width / 2 - container.height / 2 / 2 * (container.num + "").length;
+                    //text.y = 0;
+                    //container.getInstance().addChild(text);
+                    //container.getInstance().addChild(left);
+                    //container.getInstance().addChild(right);
+                    stage.update();
+                }
+            }
+        })(this)
+    );
+
+    right.addEventListener("click", (function (container) {
+            return function (event) {
+                if (container.num < container.max) {
+                    container.num++;
+                    container.getInstance().getChildAt(0).text = container.num;
+                    container.getInstance().getChildAt(0).x = container.width / 2 - container.height / 2 / 2 * (container.num + "").length;
+                    //container.getInstance().removeAllChildren();
+                    //var text = new createjs.Text(container.num, "bold " + height + "px Arial", "#000000");
+                    //text.x = container.width / 2 - container.height / 2 / 2 * (container.num + "").length;
+                    //text.y = 0;
+                    //container.getInstance().addChild(text);
+                    //container.getInstance().addChild(left);
+                    //container.getInstance().addChild(right);
+                    stage.update();
+                }
+            }
+        })(this)
+    );
+
+    container.x = this.x;
+    container.y = this.y;
+}
 function initData() {
     kanas = new Array();
 
@@ -811,6 +1002,11 @@ function getRandom(length) {
     return Math.floor(Math.random() * length);
 }
 
+//正负
+function getRandom1(length) {
+    return length - Math.floor(Math.random() * length * 2);
+}
+
 function Map() {
     this.keys = new Array();
     this.data = new Array();
@@ -845,7 +1041,7 @@ var amount = 10; //一屏幕宽能同时放多少个假名
 var fps = 30;
 var appearTime = 3000;//ms
 var currentDate = 0, lastDate = 0;
-var state, menuScreen = 0, inGameScreen = 1, levelsScreen = 2, freedomScreen = 3, setScreen = 4, aboutScreen = 5;
+var state, menuScreen = 0, inGameScreen = 1, levelsScreen = 2, freedomScreen = 3, setScreen = 4, aboutScreen = 5, readyScreen = 6;
 
 var keycodes;
 var key;
@@ -877,3 +1073,12 @@ var freedomItemTextColor = "#000000";
 var freedomMaxWidth = 980;
 var freedomItemContainers;
 var freedomStartBGColor = "#ff0033";
+var freedomModeSpeed = 5;
+
+//readyScreen
+var readyNumX, readyNumY;
+var readyGoX, readyGoY;
+var readyNumColor = "#000000";
+var readyRandom;
+var readyGoWord = "开始";
+var readyListener;
