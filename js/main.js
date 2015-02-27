@@ -264,6 +264,7 @@ function drawFreedom() {
 
         var page2ContainerData = [["经过", "分", (canvasW - virtulWidth) / 2 + virtulWidth / 4, canvasH * 0.2, randomGame.rules[0], 1, 60, 1], ["击中", "个", (canvasW - virtulWidth) / 2 + virtulWidth / 4, canvasH * 0.3, randomGame.rules[1], 10, 800, 10], ["最大连击小于", "个", (canvasW) / 2 + virtulWidth / 4, canvasH * 0.2, randomGame.rules[2], 5, 500, 5], ["漏掉个数大于", "个", (canvasW) / 2 + virtulWidth / 4, canvasH * 0.3, randomGame.rules[3], 1, 100, 1], ["击中个数小于", "个", (canvasW) / 2 + virtulWidth / 4, canvasH * 0.4, randomGame.rules[4], 5, 600, 5], ["经过时间大于", "分", (canvasW) / 2 + virtulWidth / 4, canvasH * 0.5, randomGame.rules[5], 1, 20, 1], ["命中几率小于", "﹪", (canvasW) / 2 + virtulWidth / 4, canvasH * 0.6, randomGame.rules[6], 30, 100, 5]];
         var page2Items = new Array();
+        var page2ItemSelectContainers = new Array();
         var page2ItemTextSize = freedomItemTextSize;
         var page2ItemTextColor = freedomItemTextColor;
         var page2ItemContainerWidth = virtulWidth * 0.8 / 4;
@@ -278,8 +279,59 @@ function drawFreedom() {
             var selectContainer = new SelectContainer((page2ContainerData[i][0].length + 2) * page2ItemTextSize, 0, page2ItemContainerWidth, page2ItemTextSize, page2ContainerData[i][4], page2ContainerData[i][5], page2ContainerData[i][6], page2ContainerData[i][7], true);
             selectContainer.clickCallback = (function (ii) {
                 return function (event) {
-                    randomGame.rules[ii] = this.num;
+                    //randomGame.rules[ii] = this.num;
+                    //console.log(" randomGame.rules[i] " + randomGame.rules);
 
+                    //check不应该同时选中的项目
+                    switch (ii) {
+                    case 0:
+                        if (this.num == -1) {
+                            if (page2ItemSelectContainers[1].num == -1) {
+                                //两项完成条件不能同时关闭
+                                this.turnToMin();
+                                //randomGame.rules[ii] = this.num;
+                            }
+                        } else {
+                            //两项完成条件只能开启一个
+                            page2ItemSelectContainers[1].turnOff();
+                            randomGame.rules[1] = -1;
+                            //失败条件中的经过时间关闭
+                            page2ItemSelectContainers[5].turnOff();
+                            randomGame.rules[5] = -1;
+                        }
+                        break;
+                    case 1:
+                        if (this.num == -1) {
+                            if (page2ItemSelectContainers[0].num == -1) {
+                                //两项完成条件不能同时关闭
+                                this.turnToMin();
+                                //randomGame.rules[ii] = this.num;
+                            }
+                        } else {
+                            //两项完成条件只能开启一个
+                            page2ItemSelectContainers[0].turnOff();
+                            randomGame.rules[0] = -1;
+                            //失败条件中的集中个数关闭
+                            page2ItemSelectContainers[4].turnOff();
+                            randomGame.rules[4] = -1;
+                        }
+                        break;
+                    case 4:
+                        if (this.num != -1 && page2ItemSelectContainers[1].num != -1) {
+                            //完成条件的击中个数开启时，失败条件的击中个数不能开启
+                            this.turnOff();
+                            //randomGame.rules[ii] = this.num;
+                        }
+                        break;
+                    case 5:
+                        if (this.num != -1 && page2ItemSelectContainers[0].num != -1) {
+                            //完成条件的经过时间开启时，失败条件的经过时间不能开启
+                            this.turnOff();
+                            //randomGame.rules[ii] = this.num;
+                        }
+                        break;
+                    }
+                    randomGame.rules[ii] = this.num;
                     console.log(" randomGame.rules[i] " + randomGame.rules);
                 }
             })(i);
@@ -294,6 +346,7 @@ function drawFreedom() {
 
             container.x = page2ContainerData[i][2] - ((page2ContainerData[i][0].length + 3) * page2ItemTextSize + page2ItemContainerWidth) / 2;
             container.y = page2ContainerData[i][3];
+            page2ItemSelectContainers.push(selectContainer);
             page2Items.push(container);
         }
 
@@ -332,11 +385,8 @@ function drawFreedom() {
         stage.addChild(startContainer);
 
         startContainer.addEventListener("click", function (e) {
-            dataArea = randomGame.dataArea;
-            freedomModeSpeed = randomGame.speed;
-            //freedomModeSpeed = 10 - speedContainer.num;
-            appearTime = randomGame.appearTime;
-            resetChooseMap();
+            currentGame = randomGame;
+            setCurrentGameData();
             stage.removeAllChildren();
             //state = inGameScreen;
             //drawInGame();
@@ -366,6 +416,13 @@ function drawFreedom() {
     stage.update();
 }
 
+function setCurrentGameData() {
+    dataArea = currentGame.dataArea;
+    freedomModeSpeed = currentGame.speed;
+    appearTime = currentGame.appearTime;
+    resetChooseMap();
+}
+
 function freedomAddMContainersToScreen(x, y, textContent) {
     var text = new createjs.Text(textContent, "bold " + freedomItemTextSize + "px 楷体", freedomItemTextColor);
     text.x = freedomItemWidth / 2 - freedomItemTextSize;
@@ -378,11 +435,11 @@ function freedomAddMContainersToScreen(x, y, textContent) {
     freedomMContainers.push(container);
 }
 
-function handleFreedom(e) {
-    state = inGameScreen;
-    //window.removeEventListener("click", handleFreedom);
-    drawInGame();
-}
+//function handleFreedom(e) {
+//    state = inGameScreen;
+//    //window.removeEventListener("click", handleFreedom);
+//    drawInGame();
+//}
 
 function drawReadyScreen() {
     stage.removeAllChildren();
@@ -441,6 +498,13 @@ function drawInGame() {
     resetKanaWidth();
     initText();
 
+    //reset Ticker
+    createjs.Ticker.removeAllEventListeners();
+    createjs.Ticker.reset();
+    createjs.Ticker._inited = false;
+    createjs.Ticker.init();
+
+    //gameStartMs = new Date();
     createjs.Ticker.on("tick", tick);
     createjs.Ticker.framerate = fps;
 }
@@ -449,9 +513,14 @@ function tick(event) {
     if (event.paused) {
         return;
     }
+
     currentDate = new Date();
+    if (checkGameEnd()) {
+        drawGameResult(checkGameSuccess());
+    }
+
     //    var kana = null;
-    if (currentDate - lastDate - createjs.Ticker.getTime(false) + createjs.Ticker.getTime(true) > appearTime) {
+    if (currentDate - lastDate - createjs.Ticker.getTime(false) + createjs.Ticker.getTime(true) > appearTime) {//add new kana
         lastDate = currentDate - createjs.Ticker.getTime(false) + createjs.Ticker.getTime(true);
         //        console.log(hiragana[getRandom(hiragana.length)]);
 
@@ -505,6 +574,56 @@ function tick(event) {
     stage.update();
 }
 
+function drawGameResult(result){
+    console.log("game result "+result);
+}
+
+function checkGameEnd() {
+    if (currentGame.rules[1] == -1) {//时间结束模式
+        if (Math.floor(createjs.Ticker.getTime(true) / 1000) >= currentGame.rules[0] * 60) {
+            console.log("game over");
+            return true;
+        }
+        //console.log("time " + Math.floor((currentTime - gameStartMs) / 1000));
+        //console.log("time " + Math.floor(createjs.Ticker.getTime(true) / 1000));
+    } else {//命中个数结束模式
+        if (greatNum >= currentGame.rules[1]) {
+            console.log("game over");
+            return true;
+        }
+    }
+    return false;
+}
+
+function checkGameSuccess() {
+
+    if (currentGame.rules[2] != -1) {//&&currentGame.rules[2]<combo
+        return false;
+    }
+
+    if (missNum > currentGame.rules[3] && currentGame.rules[3] != -1) {
+        return false;
+    }
+
+    if (currentGame.rules[4] != -1 && greatNum < currentGame.rules[4]) {
+        return false;
+    }
+
+    if (currentGame.rules[5] != -1 && createjs.Ticker.getTime(true) > currentGame.rules[5]) {
+        return false;
+    }
+
+    if (currentGame.rules[6] != -1 && greatNum / (greatNum + missNum) < currentGame.rules[6] / 100) {
+        return false;
+    }
+
+    return true;
+}
+
+function checkGameComplete() {
+
+}
+
 window.onresize = function () {
     resetCanvasSize();
     //resetKanaWidth();
@@ -537,7 +656,8 @@ window.onblur = function (e) {
         var h = document.body.clientHeight;
 
         if (x >= 0 && x <= w && y >= 0 && y <= h) {
-            window.focus();
+            window.onfocus();
+            //window.focus();
             return false;
         }
     }
@@ -664,6 +784,13 @@ function SelectContainer(x, y, width, height, num, min, max, step, closemode) {/
         stage.update();
     }
 
+    this.turnToMin = function () {
+        this.num = min;
+        this.getInstance().getChildAt(0).text = min;
+        this.getInstance().getChildAt(0).x = this.width / 2 - this.height / 2 / 2 * (this.num + "").length;
+        stage.update();
+    }
+
     left.addEventListener("click", (function (container) {
             return function (event) {
                 //if (container.num == -1) {
@@ -722,6 +849,7 @@ function SelectContainer(x, y, width, height, num, min, max, step, closemode) {/
     container.x = this.x;
     container.y = this.y;
 }
+
 function initData() {
     kanas = new Array();
 
@@ -1199,6 +1327,9 @@ var bendSoundMap_k, bendSound_k;//拗音
 var allMaps;
 
 var randomGame = new Game();
+var currentGame;
+
+var gameStartMs;
 //randomGame.dataArea = [true, true, false, false, false, false];
 //main data-----------------------end-----------------------------------
 
@@ -1223,5 +1354,3 @@ var readyNumColor = "#000000";
 var readyRandom;
 var readyGoWord = "开始";
 var readyListener;
-
-
