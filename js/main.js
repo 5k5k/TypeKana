@@ -136,6 +136,7 @@ function drawLevels() {
 
 }
 
+//freedom page1
 var freedomItemWidth, freedomItemHeight;
 var dataArea = [true, true, false, false, false, false];//五十平，五十片，浊平，浊片，拗平，拗片
 var freedomItems = ["正/平", "正/片", "浊/平", "浊/片", "拗/平", "拗/片"];
@@ -143,9 +144,13 @@ var freedomItemTextSize;
 var freedomMItems = ["开始", "范围", "速度", "间隔"];
 var freedomMContainers;
 
+var freedomPage = 1;
+
+//freedom page2
+
 function drawFreedom() {
     stage.removeAllChildren();
-    //window.addEventListener("click", handleFreedom);
+
     freedomItemContainers = new Array();
     freedomMContainers = new Array();
     if (canvasW > canvasH / 4 * 3) {//横版
@@ -155,11 +160,12 @@ function drawFreedom() {
         freedomItemWidth = virtulWidth * 0.8 / 4;
         freedomItemHeight = canvasH * 0.4 - 2 * virtulWidth * 0.1;
         freedomItemTextSize = freedomItemHeight * 0.625 / 3;
-        for (var i = 0; i < 6; i++) {
 
+        //page1 6 items
+        for (var i = 0; i < 6; i++) {
             var container = new createjs.Container();
             var shape = new createjs.Shape();
-            shape.graphics.beginFill(getFreedomItemBGColor(dataArea[i])).drawRect(freedomItemWidth / 10, 0, freedomItemWidth / 5 * 4, freedomItemHeight * 0.625);
+            shape.graphics.beginFill(getFreedomItemBGColor(randomGame.dataArea[i])).drawRect(freedomItemWidth / 10, 0, freedomItemWidth / 5 * 4, freedomItemHeight * 0.625);
             shape.shadow = new createjs.Shadow("#454", 0, 5, 4);
 
             var text = new createjs.Text(freedomItems[i], "bold " + freedomItemTextSize + "px 楷体", freedomItemTextColor);
@@ -172,21 +178,21 @@ function drawFreedom() {
             container.y = i % 2 * freedomItemHeight + virtulWidth * 0.1;
 
             freedomItemContainers.push(container);
-            stage.addChild(container);
+            //stage.addChild(container);
 
             container.addEventListener("click", (function (num) {
                     return function (event) {
                         var flag = false;
-                        for (var j = 0; j < dataArea.length; j++) {
-                            if (dataArea[j] && j != num) {
+                        for (var j = 0; j < randomGame.dataArea.length; j++) {
+                            if (randomGame.dataArea[j] && j != num) {
                                 flag = true;
                             }
                         }
                         if (!flag) {
                             return;
                         }
-                        dataArea[num] ? dataArea[num] = false : dataArea[num] = true;
-                        freedomItemContainers[num].getChildAt(0).graphics.beginFill(getFreedomItemBGColor(dataArea[num]))
+                        randomGame.dataArea[num] = randomGame.dataArea[num] ? false : true;
+                        freedomItemContainers[num].getChildAt(0).graphics.beginFill(getFreedomItemBGColor(randomGame.dataArea[num]))
                             .drawRect(freedomItemWidth / 10, 0, freedomItemWidth / 5 * 4, freedomItemHeight * 0.625);
                         stage.update();
                     }
@@ -194,25 +200,56 @@ function drawFreedom() {
             );
         }
 
-        var speedContainer = new SelectContainer(virtulWidth * 0.1 + freedomItemWidth * 1.1 + (canvasW - virtulWidth) / 2, canvasH * 0.4 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2 + freedomItemHeight * 0.625 / 4, freedomItemWidth * 3 / 2, freedomItemHeight * 0.625 / 2, 5, 1, 9);
-        stage.addChild(speedContainer.getInstance());
+        var speedContainer = new SelectContainer(virtulWidth * 0.1 + freedomItemWidth * 1.1 + (canvasW - virtulWidth) / 2, canvasH * 0.4 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2 + freedomItemHeight * 0.625 / 4, freedomItemWidth * 3 / 2, freedomItemHeight * 0.625 / 2, 10 - randomGame.speed, 1, 9, 1, false);
+        speedContainer.clickCallback = function () {
+            randomGame.speed = 10 - speedContainer.num;
+            console.log("speed " + randomGame.speed);
+        }
+        //stage.addChild(speedContainer.getInstance());
 
-        var intervalContainer = new SelectContainer(virtulWidth * 0.1 + freedomItemWidth * 1.1 + (canvasW - virtulWidth) / 2, canvasH * 0.5 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2 + freedomItemHeight * 0.625 / 4, freedomItemWidth * 3 / 2, freedomItemHeight * 0.625 / 2, 5, 1, 9);
-        stage.addChild(intervalContainer.getInstance());
+        var intervalContainer = new SelectContainer(virtulWidth * 0.1 + freedomItemWidth * 1.1 + (canvasW - virtulWidth) / 2, canvasH * 0.5 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2 + freedomItemHeight * 0.625 / 4, freedomItemWidth * 3 / 2, freedomItemHeight * 0.625 / 2, randomGame.appearTime / 500, 1, 9, 1, false);
+        //stage.addChild(intervalContainer.getInstance());
+        intervalContainer.clickCallback = function () {
+            randomGame.appearTime = intervalContainer.num * 500;
+            console.log("appearTime " + randomGame.appearTime);
+        }
 
-        var pageContainer = new SelectContainer(canvasW / 2 - freedomItemWidth / 2, canvasH * 0.65 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2 + freedomItemHeight * 0.625 / 4, freedomItemWidth, freedomItemHeight * 0.625 / 2, 1, 1, 2);
+        //page1 page2 common pageContainer
+        var pageContainer = new SelectContainer(canvasW / 2 - freedomItemWidth / 2, canvasH * 0.65 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2 + freedomItemHeight * 0.625 / 4, freedomItemWidth, freedomItemHeight * 0.625 / 2, freedomPage, 1, 2, 1, false);
         pageContainer.getInstance().getChildAt(1).addEventListener("click", function (e) {
-            //pageContainer.getInstance().getChildByName("left").addEventListener("click", function (e) {
-            console.log("page1");
+            //console.log("page1");
+            //console.log("pageContainer " + pageContainer.num);
+            freedomPage = 1;
+            removePage2();
+            addPage1();
+            stage.update();
         });
 
         pageContainer.getInstance().getChildAt(2).addEventListener("click", function (e) {
-            console.log("page2");
-            //stage.removeChild();
+            //console.log("page2");
+            //console.log("pageContainer " + pageContainer.num);
+            freedomPage = 2;
             removePage1();
             addPage2();
             stage.update();
         });
+
+        function removePage2() {
+            for (var i = 0; i < page2Items.length; i++) {
+                stage.removeChild(page2Items[i]);
+            }
+        }
+
+        function addPage1() {
+            stage.addChild(speedContainer.getInstance());
+            stage.addChild(intervalContainer.getInstance());
+            for (var i = 0; i < freedomMContainers.length; i++) {
+                stage.addChild(freedomMContainers[i]);
+            }
+            for (var i = 0; i < freedomItemContainers.length; i++) {
+                stage.addChild(freedomItemContainers[i]);
+            }
+        }
 
         function removePage1() {
             stage.removeChild(speedContainer.getInstance());
@@ -223,14 +260,62 @@ function drawFreedom() {
             for (var i = 0; i < freedomItemContainers.length; i++) {
                 stage.removeChild(freedomItemContainers[i]);
             }
-
         }
 
-        function addPage2() {
+        var page2ContainerData = [["经过", "分", (canvasW - virtulWidth) / 2 + virtulWidth / 4, canvasH * 0.2, randomGame.rules[0], 1, 60, 1], ["击中", "个", (canvasW - virtulWidth) / 2 + virtulWidth / 4, canvasH * 0.3, randomGame.rules[1], 10, 800, 10], ["最大连击小于", "个", (canvasW) / 2 + virtulWidth / 4, canvasH * 0.2, randomGame.rules[2], 5, 500, 5], ["漏掉个数大于", "个", (canvasW) / 2 + virtulWidth / 4, canvasH * 0.3, randomGame.rules[3], 1, 100, 1], ["击中个数小于", "个", (canvasW) / 2 + virtulWidth / 4, canvasH * 0.4, randomGame.rules[4], 5, 600, 5], ["经过时间大于", "分", (canvasW) / 2 + virtulWidth / 4, canvasH * 0.5, randomGame.rules[5], 1, 20, 1], ["命中几率小于", "﹪", (canvasW) / 2 + virtulWidth / 4, canvasH * 0.6, randomGame.rules[6], 30, 100, 5]];
+        var page2Items = new Array();
+        var page2ItemTextSize = freedomItemTextSize;
+        var page2ItemTextColor = freedomItemTextColor;
+        var page2ItemContainerWidth = virtulWidth * 0.8 / 4;
+        var page2Words = ["完成条件", "失败条件"];
 
+        for (var i = 0; i < page2ContainerData.length; i++) {
+            var container = new createjs.Container();
+            var text1 = new createjs.Text(page2ContainerData[i][0], "bold " + page2ItemTextSize + "px 楷体", page2ItemTextColor);
+            text1.x = 0;
+            text1.y = 0;
+
+            var selectContainer = new SelectContainer((page2ContainerData[i][0].length + 2) * page2ItemTextSize, 0, page2ItemContainerWidth, page2ItemTextSize, page2ContainerData[i][4], page2ContainerData[i][5], page2ContainerData[i][6], page2ContainerData[i][7], true);
+            selectContainer.clickCallback = (function (ii) {
+                return function (event) {
+                    randomGame.rules[ii] = this.num;
+
+                    console.log(" randomGame.rules[i] " + randomGame.rules);
+                }
+            })(i);
+
+            var text2 = new createjs.Text(page2ContainerData[i][1], "bold " + page2ItemTextSize + "px 楷体", page2ItemTextColor);
+            text2.x = (page2ContainerData[i][0].length + 2) * page2ItemTextSize + page2ItemContainerWidth;
+            text2.y = 0;
+
+            container.addChild(text1);
+            container.addChild(text2);
+            container.addChild(selectContainer.getInstance());
+
+            container.x = page2ContainerData[i][2] - ((page2ContainerData[i][0].length + 3) * page2ItemTextSize + page2ItemContainerWidth) / 2;
+            container.y = page2ContainerData[i][3];
+            page2Items.push(container);
+        }
+
+        var doneText = new createjs.Text(page2Words[0], "bold " + page2ItemTextSize + "px 楷体", page2ItemTextColor);
+        doneText.x = (canvasW - virtulWidth) / 2 + virtulWidth / 4 - page2Words[0].length * page2ItemTextSize / 2;
+        doneText.y = canvasH * 0.1;
+
+        var failText = new createjs.Text(page2Words[1], "bold " + page2ItemTextSize + "px 楷体", page2ItemTextColor);
+        failText.x = (canvasW) / 2 + virtulWidth / 4 - page2Words[1].length * page2ItemTextSize / 2;
+        failText.y = canvasH * 0.1;
+
+        page2Items.push(doneText);
+        page2Items.push(failText);
+
+        function addPage2() {
+            for (var i = 0; i < page2Items.length; i++) {
+                stage.addChild(page2Items[i]);
+            }
         }
 
         //left.addEventListener("click", (function (container) {
+
         stage.addChild(pageContainer.getInstance());
 
         var startText = new createjs.Text(freedomMItems[0], "bold " + freedomItemTextSize + "px 楷体", freedomItemTextColor);
@@ -247,8 +332,10 @@ function drawFreedom() {
         stage.addChild(startContainer);
 
         startContainer.addEventListener("click", function (e) {
-            freedomModeSpeed = 10 - speedContainer.num;
-            appearTime = intervalContainer.num * 500;
+            dataArea = randomGame.dataArea;
+            freedomModeSpeed = randomGame.speed;
+            //freedomModeSpeed = 10 - speedContainer.num;
+            appearTime = randomGame.appearTime;
             resetChooseMap();
             stage.removeAllChildren();
             //state = inGameScreen;
@@ -265,6 +352,14 @@ function drawFreedom() {
         freedomAddMContainersToScreen(virtulWidth * 0.1 + (canvasW - virtulWidth) / 2, canvasH * 0.4 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2, freedomMItems[2]);
         freedomAddMContainersToScreen(virtulWidth * 0.1 + (canvasW - virtulWidth) / 2, canvasH * 0.5 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2, freedomMItems[3]);
 
+        if (freedomPage == 1) {
+            removePage2();
+            addPage1();
+        } else {
+            removePage1();
+            addPage2();
+        }
+
     } else {//竖版
 
     }
@@ -279,7 +374,7 @@ function freedomAddMContainersToScreen(x, y, textContent) {
     container.addChild(text);
     container.x = x;
     container.y = y;
-    stage.addChild(container);
+    //stage.addChild(container);
     freedomMContainers.push(container);
 }
 
@@ -470,13 +565,21 @@ function resetKanaWidth() {
     kana_r = kana_d / 2;
 }
 
+//game类,对象为每一局游戏。
+function Game() {
+    this.speed = 5;
+    this.appearTime = 3000;
+    this.dataArea = [true, true, false, false, false, false];
+    this.rules = [2, -1, -1, 5, -1, -1, -1];
+}
+
 //Kana类
 function Kana(name, speed) {
     this.name = name;
     this.speed = 10;//经过几秒会落到底部
     this.x = getRandom(canvasW - kana_d * 2);//*2兼容拗音
     this.y = -kana_d;
-    isNaN(speed) ? this.speed = 10 : this.speed = speed;
+    this.speed = isNaN(speed) ? 10 : speed;
     console.log("speed " + this.speed);
     this.perStepLength = canvasH / this.speed / fps;
     //        getPerStepLength();
@@ -515,7 +618,7 @@ function Kana(name, speed) {
 }
 
 //左右箭头加数字 类
-function SelectContainer(x, y, width, height, num, min, max) {//container的x坐标，container的y坐标，container的宽，container的高，container中默认显示的数字，显示数字最小值，显示数字最大值
+function SelectContainer(x, y, width, height, num, min, max, step, closemode) {//container的x坐标，container的y坐标，container的宽，container的高，container中默认显示的数字(如果是-1则显示“关”)，显示数字最小值，显示数字最大值，步进，是否有关闭模式（当达到最小值时再按左箭头是否可以切换到“关”状态）
     this.x = x;
     this.y = y;
     this.num = num;
@@ -523,6 +626,8 @@ function SelectContainer(x, y, width, height, num, min, max) {//container的x坐
     this.max = max;
     this.width = width;
     this.height = height;
+    this.step = step;
+    this.closemode = closemode;
 
     this.getInstance = function () {
         return container;
@@ -533,22 +638,42 @@ function SelectContainer(x, y, width, height, num, min, max) {//container的x坐
         container = null;
     };
 
+    //按键后回调
+    this.clickCallback = function () {
+    };
+
     var container = new createjs.Container();
     var left = new createjs.Shape();
     left.graphics.beginFill("red").moveTo(0, height / 2).lineTo(height, 0).lineTo(height, height);
     var text = new createjs.Text(this.num, "bold " + height + "px Arial", "#000000");
     text.x = width / 2 - height / 2 / 2 * (num + "").length;
     text.y = 0;
+    if (this.num == -1) {
+        text.text = "关";
+    }
     var right = new createjs.Shape();
     right.graphics.beginFill("red").moveTo(width, height / 2).lineTo(width - height, 0).lineTo(width - height, height);
     container.addChild(text);
     container.addChild(left);
     container.addChild(right);
 
+    this.turnOff = function () {
+        this.num = -1;
+        this.getInstance().getChildAt(0).text = "关";
+        this.getInstance().getChildAt(0).x = this.width / 2 - this.height / 2;
+        stage.update();
+    }
+
     left.addEventListener("click", (function (container) {
             return function (event) {
+                //if (container.num == -1) {
+                //    container.num = container.min;
+                //    container.getInstance().getChildAt(0).text = container.num;
+                //    container.getInstance().getChildAt(0).x = container.width / 2 - container.height / 2 / 2 * (container.num + "").length;
+                //    stage.update();
+                //} else
                 if (container.num > container.min) {
-                    container.num--;
+                    container.num -= container.step;
                     //container.getInstance().removeAllChildren();
                     container.getInstance().getChildAt(0).text = container.num;
                     container.getInstance().getChildAt(0).x = container.width / 2 - container.height / 2 / 2 * (container.num + "").length;
@@ -559,15 +684,24 @@ function SelectContainer(x, y, width, height, num, min, max) {//container的x坐
                     //container.getInstance().addChild(left);
                     //container.getInstance().addChild(right);
                     stage.update();
+                } else if (container.num == container.min && closemode) {
+                    container.turnOff();
                 }
+
+                container.clickCallback();
             }
         })(this)
     );
 
     right.addEventListener("click", (function (container) {
             return function (event) {
-                if (container.num < container.max) {
-                    container.num++;
+                if (container.num == -1) {
+                    container.num = container.min;
+                    container.getInstance().getChildAt(0).text = container.num;
+                    container.getInstance().getChildAt(0).x = container.width / 2 - container.height / 2 / 2 * (container.num + "").length;
+                    stage.update();
+                } else if (container.num < container.max) {
+                    container.num += container.step;
                     container.getInstance().getChildAt(0).text = container.num;
                     container.getInstance().getChildAt(0).x = container.width / 2 - container.height / 2 / 2 * (container.num + "").length;
                     //container.getInstance().removeAllChildren();
@@ -579,6 +713,8 @@ function SelectContainer(x, y, width, height, num, min, max) {//container的x坐
                     //container.getInstance().addChild(right);
                     stage.update();
                 }
+
+                container.clickCallback();
             }
         })(this)
     );
@@ -1036,6 +1172,7 @@ function Map() {
     };
 }
 
+//main data
 var stage, canvasW, canvasH, kana_d, kana_r, kanas;
 var amount = 10; //一屏幕宽能同时放多少个假名
 var fps = 30;
@@ -1061,6 +1198,10 @@ var sonantMap_k, sonant_k;//浊音
 var bendSoundMap_k, bendSound_k;//拗音
 var allMaps;
 
+var randomGame = new Game();
+//randomGame.dataArea = [true, true, false, false, false, false];
+//main data-----------------------end-----------------------------------
+
 //menuScreen
 var oneItemMaxWidth = 300;//menu item max width
 var menuItemBGColor = "#CCFFFF", menuItemTextColor = "#000000";
@@ -1082,3 +1223,5 @@ var readyNumColor = "#000000";
 var readyRandom;
 var readyGoWord = "开始";
 var readyListener;
+
+
