@@ -14,6 +14,9 @@ function init() {
     //createjs.Ticker.framerate = fps;
 
     window.addEventListener("keydown", function (event) {
+        if (state != inGameScreen) {
+            return;
+        }
         event = event || window.event;
         for (var i = keycodes.length - 1; i > 0; i--) {
             keycodes[i] = keycodes[i - 1];
@@ -65,17 +68,20 @@ function init() {
 }
 
 var menuItems = ["闯关模式", "自由模式", "更多设置", "关于信息"];
-var backText = "返回";
+//var backText = "返回";
 var oneItemHeight, oneItemWidth;
 
 function initScreen() {
     state = menuScreen;
+    initMenuData();
+    drawMenu();
+}
+
+function initMenuData() {
     oneItemHeight = canvasH / (menuItems.length + 2 - 0.375);
     oneItemWidth = canvasW / 2;
     oneItemWidth = oneItemWidth > oneItemMaxWidth ? oneItemMaxWidth : oneItemWidth;
     menuItemTextSize = oneItemHeight * 0.625 / 3;
-
-    drawMenu();
 }
 
 function drawMenu() {
@@ -99,8 +105,8 @@ function drawMenu() {
         //container.name = i;
         //console.log("        container.name " + container.name);
 
-        menuItemContainers.push(container);
-        stage.addChild(container);
+        //menuItemContainers.push(container);
+        //stage.addChild(container);
 
         container.addEventListener("click", (function (num) {
                 return function (event) {
@@ -123,6 +129,9 @@ function drawMenu() {
                 }
             })(i)
         );
+
+        menuItemContainers.push(container);
+        stage.addChild(container);
     }
 
     version = new createjs.Text(versionText, "bold " + menuItemTextSize / 2 + "px 楷体", menuItemTextColor);
@@ -331,6 +340,10 @@ function drawFreedom() {
                         }
                         break;
                     }
+
+                    if (page2ItemSelectContainers[2].num == -1 && page2ItemSelectContainers[3].num == -1 && page2ItemSelectContainers[4].num == -1 && page2ItemSelectContainers[5].num == -1 && page2ItemSelectContainers[6].num == -1) {
+                        this.turnToMin();
+                    }
                     randomGame.rules[ii] = this.num;
                     console.log(" randomGame.rules[i] " + randomGame.rules);
                 }
@@ -393,10 +406,32 @@ function drawFreedom() {
 
             //console.log("appearTime " + appearTime);
             //console.log("freedomModeSpeed " + freedomModeSpeed);
+            initTicker();
             state = readyScreen;
             drawReadyScreen();
         });
         //freedomMContainers.push(startContainer);
+
+        var backText = new createjs.Text(backWord, "bold " + freedomItemTextSize + "px 楷体", freedomItemTextColor);
+        backText.x = freedomItemTextSize * 0.25;
+        backText.y = freedomItemTextSize * 0.25;
+
+        var backShape = new createjs.Shape();
+        backShape.graphics.beginFill("#f63990").drawRoundRect(0, 0, freedomItemTextSize * backWord.length * 1.5, freedomItemTextSize * 1.5, freedomItemTextSize * 1.5 / 4);
+        backShape.shadow = new createjs.Shadow("#454", 0, 5, 4);
+
+        var backButton = new createjs.Container();
+        backButton.addChild(backShape);
+        backButton.addChild(backText);
+        backButton.x = canvasW - freedomItemTextSize * backWord.length * 2;
+        backButton.y = canvasH - freedomItemTextSize * 2;
+
+        stage.addChild(backButton);
+
+        backButton.addEventListener("click", function (e) {
+            state = menuScreen;
+            drawMenu();
+        });
 
         freedomAddMContainersToScreen(virtulWidth * 0.1 + (canvasW - virtulWidth) / 2, virtulWidth * 0.1, freedomMItems[1]);
         freedomAddMContainersToScreen(virtulWidth * 0.1 + (canvasW - virtulWidth) / 2, canvasH * 0.4 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2, freedomMItems[2]);
@@ -495,14 +530,12 @@ function readyTick(event) {
 }
 
 function drawInGame() {
+    initInGameData();
     resetKanaWidth();
     initText();
 
     //reset Ticker
-    createjs.Ticker.removeAllEventListeners();
-    createjs.Ticker.reset();
-    createjs.Ticker._inited = false;
-    createjs.Ticker.init();
+    initTicker();
 
     //gameStartMs = new Date();
     createjs.Ticker.on("tick", tick);
@@ -574,8 +607,56 @@ function tick(event) {
     stage.update();
 }
 
-function drawGameResult(result){
-    console.log("game result "+result);
+function drawGameResult(result) {
+    console.log("game result " + result);
+
+    //createjs.Ticker.off("tick", readyListener);
+    initTicker();
+
+    createjs.Ticker.on("tick", resultTick);
+
+    var word = result ? "胜利" : "失败";
+    var text = new createjs.Text(word, "bold " + canvasH / 4 * 3 / 2 + "px Arial", "#000000");
+
+    text.x = readyGoX;
+    text.y = readyGoY;
+    stage.addChild(text);
+
+    //stage.addEventListener("click", stageClickListener);
+}
+
+//var stageClickListener = function (event) {
+//    stage.removeEventListener("click", stageClickListener);
+//    console.log("key click");
+//    initTicker();
+//    state = menuScreen;
+//    drawMenu();
+//
+//};
+
+function resultTick(event) {
+    if (event.paused) {
+        return;
+    }
+
+    console.log("createjs.Ticker.getTime(true) / 1000 " + createjs.Ticker.getTime(true) / 1000);
+    if (createjs.Ticker.getTime(true) / 1000 > 3) {//先回首页
+        //stage.removeEventListener("click", stageClickListener);
+        console.log("time out");
+        initTicker();
+        state = menuScreen;
+        drawMenu();
+
+        //=
+    }
+}
+
+function initTicker() {
+    createjs.Ticker._pausedTime = 0;
+    createjs.Ticker.removeAllEventListeners();
+    createjs.Ticker.reset();
+    createjs.Ticker._inited = false;
+    createjs.Ticker.init();
 }
 
 function checkGameEnd() {
@@ -609,7 +690,7 @@ function checkGameSuccess() {
         return false;
     }
 
-    if (currentGame.rules[5] != -1 && createjs.Ticker.getTime(true) > currentGame.rules[5]) {
+    if (currentGame.rules[5] != -1 && createjs.Ticker.getTime(true) / 1000 > currentGame.rules[5]) {
         return false;
     }
 
@@ -634,6 +715,13 @@ window.onresize = function () {
     //}
     switch (state) {
     case menuScreen:
+        oneItemHeight = canvasH / (menuItems.length + 2 - 0.375);
+        oneItemWidth = canvasW / 2;
+        oneItemWidth = oneItemWidth > oneItemMaxWidth ? oneItemMaxWidth : oneItemWidth;
+        menuItemTextSize = oneItemHeight * 0.625 / 3;
+
+        initMenuData();
+        drawMenu();
         break;
     case inGameScreen:
         resetKanaWidth();
@@ -1223,6 +1311,14 @@ function initText() {
     stage.addChild(miss);
 }
 
+function initInGameData() {
+    //keyText="";
+    kanas = new Array();
+    keycodes = [-1, -1, -1];
+    greatNum = 0;
+    missNum = 0;
+}
+
 function resetTexts() {
     key.y = canvasH - keyTextSize;
     great.y = canvasH - keyTextSize;
@@ -1329,6 +1425,7 @@ var allMaps;
 var randomGame = new Game();
 var currentGame;
 
+var backWord = "返回";
 var gameStartMs;
 //randomGame.dataArea = [true, true, false, false, false, false];
 //main data-----------------------end-----------------------------------
