@@ -113,6 +113,7 @@ function drawMenu() {
                     console.log("this.name " + num);
                     switch (num) {
                     case 0:
+                        state = levelsScreen;
                         drawLevels();
                         break;
                     case 1:
@@ -141,8 +142,73 @@ function drawMenu() {
     stage.update();
 }
 
-function drawLevels() {
+//levelScreen
+var levelsPerLine = 5;
+var levelsPerPage = 25;
+var levelWidth, levelHeight;
+var levelChooseAbleColor = "green";
+var levelChooseDisableColor = "#a0a0a0";
+var levelProgress = 0;
+var levelFontColor = "black";
 
+function drawLevels() {
+    stage.removeAllChildren();
+    var contentWidth = canvasH / 8 * 5 > canvasW ? canvasW : canvasH / 8 * 5;
+    var contentHeight = contentWidth;
+    var topD = (canvasH) / 8;
+    var leftD = (canvasW - contentWidth) / 2;
+
+    levelWidth = contentWidth / levelsPerLine;
+    levelHeight = contentHeight / levelsPerLine;
+
+    var levelContainers = new Array();
+    var spaceW = levelWidth / 8;
+    var spaceH = levelHeight / 8;
+    var fontSize = levelHeight / 2;
+
+    for (var i = 0; i < levelsPerPage; i++) {
+        var hNum = Math.floor(i % levelsPerLine);
+        var vNum = Math.floor(i / levelsPerLine);
+
+        //console.log("hNum " + hNum + " vNum " + vNum);
+
+        var container = new createjs.Container();
+        var shape = new createjs.Shape();
+        shape.graphics.beginFill(i > levelProgress ? levelChooseDisableColor : levelChooseAbleColor).drawRect(0, 0, levelWidth - 2 * spaceW, levelHeight - 2 * spaceH);
+        shape.shadow = new createjs.Shadow("#454", 0, 5, 4);
+
+        var text = new createjs.Text(i + 1, "bold " + fontSize + "px 楷体", levelFontColor);
+        text.x = (levelWidth - 2 * spaceW) / 2 - fontSize / 2 / 2 * (i + 1 + "").length;
+        text.y = spaceH;
+        //text.y = (levelHeight - 2 * spaceH) / 2 - fontSize / 2 / 2;
+
+        container.addChild(shape);
+        container.addChild(text);
+        container.x = leftD + hNum * levelWidth + spaceW;
+        container.y = topD + vNum * levelHeight + spaceH;
+
+        levelContainers.push(container);
+        stage.addChild(container);
+
+        container.addEventListener("click", (function (which) {
+                return function (event) {
+                    if (which > levelProgress) {
+                        return;
+                    }
+                    //=
+                    currentGame = levelGames[which];
+                    setCurrentGameData();
+                    stage.removeAllChildren();
+
+                    initTicker();
+                    state = readyScreen;
+                    drawReadyScreen();
+                }
+            })(i)
+        );
+    }
+
+    stage.update();
 }
 
 //freedom page1
@@ -610,6 +676,9 @@ function tick(event) {
 function drawGameResult(result) {
     console.log("game result " + result);
 
+    if (result && currentGame.level == levelProgress) {
+        levelProgress++;
+    }
     //createjs.Ticker.off("tick", readyListener);
     initTicker();
 
@@ -779,6 +848,7 @@ function Game() {
     this.appearTime = 3000;
     this.dataArea = [true, true, false, false, false, false];
     this.rules = [2, -1, -1, 5, -1, -1, -1];
+    this.level = -1;//-1 = randomGame;通关模式从0开始
 }
 
 //Kana类
@@ -1292,6 +1362,59 @@ function initData() {
     //chooseKana = katakana;
     //    chooseMap = hiraganaMap;
     //    chooseKana = hiragana;
+
+    levelGames = new Array();
+
+    //1
+    var level = new Game();
+    level.speed = 8;
+    level.appearTime = 4000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [-1, 10, -1, 5, -1, -1, -1];
+    level.level = 0;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [1, -1, -1, 5, -1, -1, -1];
+    level.level = 1;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [1, -1, -1, 2, -1, -1, -1];
+    level.level = 2;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [2, -1, -1, -1, -1, -1, 100];
+    level.level = 3;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 4;
+    levelGames.push(level);
+
+    //6
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
 }
 
 function initText() {
@@ -1427,6 +1550,7 @@ var currentGame;
 
 var backWord = "返回";
 var gameStartMs;
+var levelGames;
 //randomGame.dataArea = [true, true, false, false, false, false];
 //main data-----------------------end-----------------------------------
 
