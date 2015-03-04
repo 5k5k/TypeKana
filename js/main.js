@@ -5,14 +5,11 @@ function init() {
     initData();
     stage = new createjs.Stage("mCanvas");
     resetCanvasSize();
-
     initScreen();
-    //resetKanaWidth();
-    //initText();
+    addWindowListeners();
+}
 
-    //createjs.Ticker.on("tick", tick);
-    //createjs.Ticker.framerate = fps;
-
+function addWindowListeners() {
     window.addEventListener("keydown", function (event) {
         if (state != inGameScreen) {
             return;
@@ -67,10 +64,6 @@ function init() {
     });
 }
 
-var menuItems = ["闯关模式", "自由模式", "更多设置", "关于信息"];
-//var backText = "返回";
-var oneItemHeight, oneItemWidth;
-
 function initScreen() {
     state = menuScreen;
     initMenuData();
@@ -102,34 +95,28 @@ function drawMenu() {
         container.addChild(text);
         container.x = (canvasW - oneItemWidth) / 2;
         container.y = (i + 1) * oneItemHeight;
-        //container.name = i;
-        //console.log("        container.name " + container.name);
-
-        //menuItemContainers.push(container);
-        //stage.addChild(container);
 
         container.addEventListener("click", (function (num) {
-                return function (event) {
-                    console.log("this.name " + num);
-                    switch (num) {
-                    case 0:
-                        state = levelsScreen;
-                        drawLevels();
-                        break;
-                    case 1:
-                        state = freedomScreen;
-                        drawFreedom();
-                        break;
-                    case 2:
-                        drawSet();
-                        break;
-                    case 3:
-                        drawAbout();
-                        break;
-                    }
+            return function (event) {
+                //console.log("this.name " + num);
+                switch (num) {
+                case 0:
+                    state = levelsScreen;
+                    drawLevels();
+                    break;
+                case 1:
+                    state = freedomScreen;
+                    drawFreedom();
+                    break;
+                case 2:
+                    drawSet();
+                    break;
+                case 3:
+                    drawAbout();
+                    break;
                 }
-            })(i)
-        );
+            }
+        })(i));
 
         menuItemContainers.push(container);
         stage.addChild(container);
@@ -144,12 +131,13 @@ function drawMenu() {
 
 //levelScreen
 var levelsPerLine = 5;
-var levelsPerPage = 25;
+var levelsPerPage = 25;//check
 var levelWidth, levelHeight;
 var levelChooseAbleColor = "green";
 var levelChooseDisableColor = "#a0a0a0";
 var levelProgress = 0;
 var levelFontColor = "black";
+var currentLevelPage = 1;
 
 function drawLevels() {
     stage.removeAllChildren();
@@ -166,31 +154,102 @@ function drawLevels() {
     var spaceH = levelHeight / 8;
     var fontSize = levelHeight / 2;
 
-    for (var i = 0; i < levelsPerPage; i++) {
-        var hNum = Math.floor(i % levelsPerLine);
-        var vNum = Math.floor(i / levelsPerLine);
+    var totalPages = Math.ceil(levelGames.length / levelsPerPage);
+    //=
+    var pageContainerWidth = levelWidth * 3;
+    var pageContaineHeight = levelHeight / 2;
+    var pageContainerX = (canvasW - pageContainerWidth) / 2;
+    var pageContainerY = (canvasH) / 32 * 27;
+    //var pageContainerY = (canvasH) / 8 * 7;
+    //var levelsOnScreen=new Array();
 
-        //console.log("hNum " + hNum + " vNum " + vNum);
+    var pageContainer = new SelectContainer(pageContainerX, pageContainerY, pageContainerWidth, pageContaineHeight, currentLevelPage, 1, totalPages, 1, false);
+    pageContainer.clickCallback = function () {
 
-        var container = new createjs.Container();
-        var shape = new createjs.Shape();
-        shape.graphics.beginFill(i > levelProgress ? levelChooseDisableColor : levelChooseAbleColor).drawRect(0, 0, levelWidth - 2 * spaceW, levelHeight - 2 * spaceH);
-        shape.shadow = new createjs.Shadow("#454", 0, 5, 4);
+        if (currentLevelPage != this.num) {
+            currentLevelPage = this.num;
 
-        var text = new createjs.Text(i + 1, "bold " + fontSize + "px 楷体", levelFontColor);
-        text.x = (levelWidth - 2 * spaceW) / 2 - fontSize / 2 / 2 * (i + 1 + "").length;
-        text.y = spaceH;
-        //text.y = (levelHeight - 2 * spaceH) / 2 - fontSize / 2 / 2;
+            for (var i = 0; i < levelContainers.length; i++) {
+                stage.removeChild(levelContainers[i]);
+            }
+            drawOnePageLevels();
+            stage.update();
+        }
+        //randomGame.speed = 10 - speedContainer.num;
+        console.log("currentLevelPage " + currentLevelPage);
+    };
+//=
+    stage.addChild(pageContainer.getInstance());
 
-        container.addChild(shape);
-        container.addChild(text);
-        container.x = leftD + hNum * levelWidth + spaceW;
-        container.y = topD + vNum * levelHeight + spaceH;
+    addBackButton(function () {
+        state = menuScreen;
+        drawMenu();
+    });
 
-        levelContainers.push(container);
-        stage.addChild(container);
+    drawOnePageLevels();
+    //for (var i = 0; i < levelGames.length; i++) {
+    //    var hNum = Math.floor(i % levelsPerLine);
+    //    var vNum = Math.floor(i / levelsPerLine);
+    //
+    //    var container = new createjs.Container();
+    //    var shape = new createjs.Shape();
+    //    shape.graphics.beginFill(i > levelProgress ? levelChooseDisableColor : levelChooseAbleColor).drawRect(0, 0, levelWidth - 2 * spaceW, levelHeight - 2 * spaceH);
+    //    shape.shadow = new createjs.Shadow("#454", 0, 5, 4);
+    //
+    //    var text = new createjs.Text(i + 1, "bold " + fontSize + "px 楷体", levelFontColor);
+    //    text.x = (levelWidth - 2 * spaceW) / 2 - fontSize / 2 / 2 * (i + 1 + "").length;
+    //    text.y = spaceH;
+    //
+    //    container.addChild(shape);
+    //    container.addChild(text);
+    //    container.x = leftD + hNum * levelWidth + spaceW;
+    //    container.y = topD + vNum * levelHeight + spaceH;
+    //
+    //    levelContainers.push(container);
+    //    stage.addChild(container);
+    //
+    //    container.addEventListener("click", (function (which) {
+    //        return function (event) {
+    //            if (which > levelProgress) {
+    //                return;
+    //            }
+    //            //=
+    //            currentGame = levelGames[which];
+    //            setCurrentGameData();
+    //            stage.removeAllChildren();
+    //
+    //            initTicker();
+    //            state = readyScreen;
+    //            drawReadyScreen();
+    //        }
+    //    })(i));
+    //}
 
-        container.addEventListener("click", (function (which) {
+    function drawOnePageLevels() {
+        levelContainers = new Array();
+        var large = currentLevelPage * levelsPerPage > levelGames.length ? levelGames.length : currentLevelPage * levelsPerPage;
+        for (var i = (currentLevelPage - 1) * levelsPerPage; i < large; i++) {
+            var hNum = Math.floor(i % levelsPerPage % levelsPerLine);
+            var vNum = Math.floor(i % levelsPerPage / levelsPerLine);
+
+            var container = new createjs.Container();
+            var shape = new createjs.Shape();
+            shape.graphics.beginFill(i > levelProgress ? levelChooseDisableColor : levelChooseAbleColor).drawRect(0, 0, levelWidth - 2 * spaceW, levelHeight - 2 * spaceH);
+            shape.shadow = new createjs.Shadow("#454", 0, 5, 4);
+
+            var text = new createjs.Text(i + 1, "bold " + fontSize + "px 楷体", levelFontColor);
+            text.x = (levelWidth - 2 * spaceW) / 2 - fontSize / 2 / 2 * (i + 1 + "").length;
+            text.y = spaceH;
+
+            container.addChild(shape);
+            container.addChild(text);
+            container.x = leftD + hNum * levelWidth + spaceW;
+            container.y = topD + vNum * levelHeight + spaceH;
+
+            levelContainers.push(container);
+            stage.addChild(container);
+
+            container.addEventListener("click", (function (which) {
                 return function (event) {
                     if (which > levelProgress) {
                         return;
@@ -204,8 +263,8 @@ function drawLevels() {
                     state = readyScreen;
                     drawReadyScreen();
                 }
-            })(i)
-        );
+            })(i));
+        }
     }
 
     stage.update();
@@ -478,26 +537,30 @@ function drawFreedom() {
         });
         //freedomMContainers.push(startContainer);
 
-        var backText = new createjs.Text(backWord, "bold " + freedomItemTextSize + "px 楷体", freedomItemTextColor);
-        backText.x = freedomItemTextSize * 0.25;
-        backText.y = freedomItemTextSize * 0.25;
-
-        var backShape = new createjs.Shape();
-        backShape.graphics.beginFill("#f63990").drawRoundRect(0, 0, freedomItemTextSize * backWord.length * 1.5, freedomItemTextSize * 1.5, freedomItemTextSize * 1.5 / 4);
-        backShape.shadow = new createjs.Shadow("#454", 0, 5, 4);
-
-        var backButton = new createjs.Container();
-        backButton.addChild(backShape);
-        backButton.addChild(backText);
-        backButton.x = canvasW - freedomItemTextSize * backWord.length * 2;
-        backButton.y = canvasH - freedomItemTextSize * 2;
-
-        stage.addChild(backButton);
-
-        backButton.addEventListener("click", function (e) {
+        addBackButton(function () {
             state = menuScreen;
             drawMenu();
         });
+        //var backText = new createjs.Text(backWord, "bold " + freedomItemTextSize + "px 楷体", freedomItemTextColor);
+        //backText.x = freedomItemTextSize * 0.25;
+        //backText.y = freedomItemTextSize * 0.25;
+        //
+        //var backShape = new createjs.Shape();
+        //backShape.graphics.beginFill("#f63990").drawRoundRect(0, 0, freedomItemTextSize * backWord.length * 1.5, freedomItemTextSize * 1.5, freedomItemTextSize * 1.5 / 4);
+        //backShape.shadow = new createjs.Shadow("#454", 0, 5, 4);
+        //
+        //var backButton = new createjs.Container();
+        //backButton.addChild(backShape);
+        //backButton.addChild(backText);
+        //backButton.x = canvasW - freedomItemTextSize * backWord.length * 2;
+        //backButton.y = canvasH - freedomItemTextSize * 2;
+        //
+        //stage.addChild(backButton);
+        //
+        //backButton.addEventListener("click", function (e) {
+        //    state = menuScreen;
+        //    drawMenu();
+        //});
 
         freedomAddMContainersToScreen(virtulWidth * 0.1 + (canvasW - virtulWidth) / 2, virtulWidth * 0.1, freedomMItems[1]);
         freedomAddMContainersToScreen(virtulWidth * 0.1 + (canvasW - virtulWidth) / 2, canvasH * 0.4 + (canvasH * 0.2 - freedomItemHeight * 0.625) / 2, freedomMItems[2]);
@@ -556,6 +619,26 @@ function drawReadyScreen() {
     text.y = readyNumY;
     stage.addChild(text);
 
+    var infoText = "";
+    infoText += currentGame.rules[0] == -1 ? "" : currentGame.rules[0] + "分钟内";
+    infoText += currentGame.rules[1] == -1 ? "" : "命中" + currentGame.rules[1] + "个的同时";
+    infoText += currentGame.rules[2] == -1 ? "" : "，连击不小于" + currentGame.rules[2] + "个";
+    infoText += currentGame.rules[3] == -1 ? "" : "，漏掉不多于" + currentGame.rules[3] + "个";
+    infoText += currentGame.rules[4] == -1 ? "" : "，命中不小于" + currentGame.rules[4] + "个";
+    infoText += currentGame.rules[5] == -1 ? "" : "，用时不多于" + currentGame.rules[5] + "分钟";
+    infoText += currentGame.rules[6] == -1 ? "" : "，命中率不小于" + currentGame.rules[6] + "%";
+    infoText += "。";
+
+    var infoTextFontSize = canvasH / 20;
+    var infoX = (canvasW - infoText.length * infoTextFontSize) / 2;
+    var infoY = canvasH / 20 * 16;
+
+    //if(currentGame.rules[0])
+    var info = new createjs.Text(infoText, "bold " + infoTextFontSize + "px 楷体", readyNumColor);
+    info.x = infoX;
+    info.y = infoY;
+    stage.addChild(info);
+
     readyListener = createjs.Ticker.on("tick", readyTick);
     createjs.Ticker.framerate = fps;
 }
@@ -579,6 +662,7 @@ function readyTick(event) {
         stage.getChildAt(0).text = readyGoWord;
         stage.getChildAt(0).x = readyGoX;
         stage.getChildAt(0).y = readyGoY;
+        stage.removeChildAt(1);
     }
 //    if (3 - Math.floor(createjs.Ticker.getTime(true) / 1000) > 0) {
 //        stage.getChildAt(0).text = 3 - Math.floor(createjs.Ticker.getTime(true) / 1000);
@@ -676,8 +760,9 @@ function tick(event) {
 function drawGameResult(result) {
     console.log("game result " + result);
 
-    if (result && currentGame.level == levelProgress) {
+    if (result && currentGame.level == levelProgress && levelProgress < levelGames.length) {
         levelProgress++;
+        saveProgress();
     }
     //createjs.Ticker.off("tick", readyListener);
     initTicker();
@@ -694,6 +779,17 @@ function drawGameResult(result) {
     //stage.addEventListener("click", stageClickListener);
 }
 
+function saveProgress() {
+    localStorage.progress = levelProgress;
+}
+
+function loadProgress() {
+    if (localStorage.progress == undefined) {
+        localStorage.progress = 0;
+    }
+    return localStorage.progress;
+    //return 34;
+}
 //var stageClickListener = function (event) {
 //    stage.removeEventListener("click", stageClickListener);
 //    console.log("key click");
@@ -702,6 +798,35 @@ function drawGameResult(result) {
 //    drawMenu();
 //
 //};
+
+var backFontSize;
+var backFontColor = "black";
+var backButtonWidth, backButtonHeight;
+
+function addBackButton(clickfunction) {
+    backFontSize = canvasH > canvasW ? canvasW / 30 : canvasH / 30;
+
+    backButtonWidth = backFontSize * 4;
+    backButtonHeight = backFontSize * 2;
+
+    var backText = new createjs.Text(backWord, "bold " + backFontSize + "px 楷体", backFontColor);
+    backText.x = (backButtonWidth - backWord.length * backFontSize) / 2;// freedomItemTextSize * 0.25;
+    backText.y = (backButtonHeight - backFontSize) / 2;//freedomItemTextSize * 0.25;
+
+    var backShape = new createjs.Shape();
+    backShape.graphics.beginFill("#f63990").drawRoundRect(0, 0, backButtonWidth, backButtonHeight, backButtonHeight / 4);
+    backShape.shadow = new createjs.Shadow("#454", 0, 5, 4);
+
+    var backButton = new createjs.Container();
+    backButton.addChild(backShape);
+    backButton.addChild(backText);
+    backButton.x = canvasW - backButtonWidth * 1.5;
+    backButton.y = canvasH - backButtonHeight * 1.5;
+
+    stage.addChild(backButton);
+
+    backButton.addEventListener("click", clickfunction);
+}
 
 function resultTick(event) {
     if (event.paused) {
@@ -713,10 +838,14 @@ function resultTick(event) {
         //stage.removeEventListener("click", stageClickListener);
         console.log("time out");
         initTicker();
-        state = menuScreen;
-        drawMenu();
 
-        //=
+        if (currentGame.level == -1) {
+            state = menuScreen;
+            drawMenu();
+        } else {
+            state = levelsScreen;
+            drawLevels();
+        }
     }
 }
 
@@ -923,6 +1052,7 @@ function SelectContainer(x, y, width, height, num, min, max, step, closemode) {/
     var container = new createjs.Container();
     var left = new createjs.Shape();
     left.graphics.beginFill("red").moveTo(0, height / 2).lineTo(height, 0).lineTo(height, height);
+    left.shadow = new createjs.Shadow("#454", 0, 4, 3);
     var text = new createjs.Text(this.num, "bold " + height + "px Arial", "#000000");
     text.x = width / 2 - height / 2 / 2 * (num + "").length;
     text.y = 0;
@@ -931,6 +1061,7 @@ function SelectContainer(x, y, width, height, num, min, max, step, closemode) {/
     }
     var right = new createjs.Shape();
     right.graphics.beginFill("red").moveTo(width, height / 2).lineTo(width - height, 0).lineTo(width - height, height);
+    right.shadow = new createjs.Shadow("#454", 0, 4, 3);
     container.addChild(text);
     container.addChild(left);
     container.addChild(right);
@@ -1009,6 +1140,7 @@ function SelectContainer(x, y, width, height, num, min, max, step, closemode) {/
 }
 
 function initData() {
+    levelProgress = loadProgress();
     kanas = new Array();
 
     hiraganaMap = new Map();
@@ -1069,34 +1201,6 @@ function initData() {
 
     hiraganaMap.set("ん", [[78, 78]]);//nn
 
-    //hiragana = [
-    //    "あ", "い", "う", "え", "お",
-    //    "か", "き", "く", "け", "こ",
-    //    "さ", "し", "す", "せ", "そ",
-    //    "た", "ち", "つ", "て", "と",
-    //    "な", "に", "ぬ", "ね", "の",
-    //    "は", "ひ", "ふ", "へ", "ほ",
-    //    "ま", "み", "む", "め", "も",
-    //    "や", "ゆ", "よ",
-    //    "ら", "り", "る", "れ", "ろ",
-    //    "わ", "を",
-    //    "ん"
-    //];
-
-    //katakana = [
-    //    "ア", "イ", "ウ", "エ", "オ",
-    //    "カ", "キ", "ク", "ケ", "コ",
-    //    "サ", "シ", "ス", "セ", "ソ",
-    //    "タ", "チ", "ツ", "テ", "ト",
-    //    "ナ", "ニ", "ヌ", "ネ", "ノ",
-    //    "ハ", "ヒ", "フ", "ヘ", "ホ",
-    //    "マ", "ミ", "ム", "メ", "モ",
-    //    "ヤ", "ユ", "ヨ",
-    //    "ラ", "リ", "ル", "レ", "ロ",
-    //    "ワ", "ヲ",
-    //    "ン"
-    //];
-
     katakanaMap = new Map();
     katakanaMap.set("ア", [[65]]);//a
     katakanaMap.set("イ", [[73]]);//i
@@ -1154,36 +1258,6 @@ function initData() {
     katakanaMap.set("ヲ", [[87, 79]]);//wo
 
     katakanaMap.set("ン", [[78, 78]]);//nn
-
-    //sonant_h = [
-    //    "が", "ぎ", "ぐ", "げ", "ご",
-    //    "ざ", "じ", "ず", "ぜ", "ぞ",
-    //    "だ", "ぢ", "づ", "で", "ど",
-    //    "ば", "び", "ぶ", "べ", "ぼ",
-    //    "ぱ", "ぴ", "ぷ", "ぺ", "ぽ"
-    //];
-
-    //sonant_k = [
-    //    "ガ", "ギ", "グ", "ゲ", "ゴ",
-    //    "ザ", "ジ", "ズ", "ゼ", "ゾ",
-    //    "ダ", "ヂ", "ヅ", "デ", "ド",
-    //    "バ", "ビ", "ブ", "ベ", "ボ",
-    //    "パ", "ピ", "プ", "ペ", "ポ"
-    //];
-
-    //bendSound_h = [
-    //    "きゃ", "きゅ", "きょ",
-    //    "しゃ", "しゅ", "しょ",
-    //    "ちゃ", "ちゅ", "ちょ",
-    //    "にゃ", "にゅ", "にょ",
-    //    "ひゃ", "ひゅ", "ひょ",
-    //    "みゃ", "みゅ", "みょ",
-    //    "りゃ", "りゅ", "りょ",
-    //    "ぎゃ", "ぎゅ", "ぎょ",
-    //    "じゃ", "じゅ", "じょ",
-    //    "びゃ", "びゅ", "びょ",
-    //    "ぴゃ", "ぴゅ", "ぴょ"
-    //];
 
     sonantMap_h = new Map();
     sonantMap_h.set("が", [[71, 65]]);//ga
@@ -1342,9 +1416,6 @@ function initData() {
     keycodes = [-1, -1, -1];
 
     chooseMap = new Map();
-    //chooseMap.keys = katakanaMap.keys.concat(hiraganaMap.keys);
-    //chooseMap.data = katakanaMap.data.concat(hiraganaMap.data);
-    //chooseKana = katakana.concat(hiragana);
 
     for (var i = 0; i < katakanaMap.keys.length; i++) {
         chooseMap.set(katakanaMap.keys[i], katakanaMap.get(katakanaMap.keys[i]));
@@ -1354,23 +1425,21 @@ function initData() {
         chooseMap.set(hiraganaMap.keys[i], hiraganaMap.get(hiraganaMap.keys[i]));
     }
 
-    //for (var i = 0; i < chooseKana.length; i++) {
-    //    console.log("choose " + chooseKana[i]);
-    //}
-
-    //chooseMap = katakanaMap;
-    //chooseKana = katakana;
-    //    chooseMap = hiraganaMap;
-    //    chooseKana = hiragana;
-
     levelGames = new Array();
 
     //1
+    //var level = new Game();
+    //level.speed = 8;
+    //level.appearTime = 4000;
+    //level.dataArea = [true, false, false, false, false, false];
+    //level.rules = [-1, 10, -1, 5, -1, -1, -1];
+    //level.level = 0;
+    //levelGames.push(level);
     var level = new Game();
     level.speed = 8;
     level.appearTime = 4000;
     level.dataArea = [true, false, false, false, false, false];
-    level.rules = [-1, 10, -1, 5, -1, -1, -1];
+    level.rules = [-1, 1, -1, 5, -1, -1, -1];
     level.level = 0;
     levelGames.push(level);
 
@@ -1415,7 +1484,380 @@ function initData() {
     level.level = 5;
     levelGames.push(level);
 
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    //11
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    //16
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    //21
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    //26
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    //31
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    //36
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    //41
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    //46
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
+    //51
+    level = new Game();
+    level.speed = 4;
+    level.appearTime = 2000;
+    level.dataArea = [true, false, false, false, false, false];
+    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.level = 5;
+    levelGames.push(level);
+
 }
+
+//function loadLevelProgress() {
+//    return 0;
+//}
 
 function initText() {
     key = new createjs.Text(keyText, "bold " + keyTextSize + "px Arial", "#000000");
@@ -1432,10 +1874,16 @@ function initText() {
     miss.x = missX;
     miss.y = canvasH - keyTextSize;
     stage.addChild(miss);
+
+    addBackButton(function () {
+        initTicker();
+
+        state = levelsScreen;
+        drawLevels();
+    });
 }
 
 function initInGameData() {
-    //keyText="";
     kanas = new Array();
     keycodes = [-1, -1, -1];
     greatNum = 0;
@@ -1559,6 +2007,8 @@ var oneItemMaxWidth = 300;//menu item max width
 var menuItemBGColor = "#CCFFFF", menuItemTextColor = "#000000";
 var menuItemTextSize, version, versionText = "ver.0.2.0";
 var menuItemContainers;
+var menuItems = ["闯关模式", "自由模式", "更多设置", "关于信息"];
+var oneItemHeight, oneItemWidth;
 
 //freedomScreen
 var freedomItemBGSelectColor = "#00ff00", freedomItemBGUnSelectColor = "#e4eaf2";
