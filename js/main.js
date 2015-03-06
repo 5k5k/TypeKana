@@ -897,7 +897,7 @@ function checkGameEnd() {
 
 function checkGameSuccess() {
 
-    if (currentGame.rules[2] != -1 && currentGame.rules[2] > maxCombo) {//&&currentGame.rules[2]<combo
+    if (currentGame.rules[2] != -1 && currentGame.rules[2] > maxCombo) {
         return false;
     }
 
