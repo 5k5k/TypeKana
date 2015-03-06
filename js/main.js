@@ -42,12 +42,20 @@ function addWindowListeners() {
                     kanas[i].destroy();
                     kanas.splice(i, 1);
                     greatNum++;
+                    great.text = greatText + greatNum;
+                    resetHitRate();
+                    currentComboNum++;
+                    if (currentComboNum > maxComboNum) {
+                        maxComboNum = currentComboNum;
+                    }
+                    currentCombo.text = currentComboText + currentComboNum;
+                    maxCombo.text = maxComboText + maxComboNum;
                     break;
                 }
             }
         }
         key.text = keyText + changeKeycodesToChars();
-        great.text = greatText + greatNum;
+        //great.text = greatText + greatNum;
     });
 
     //为了解决最小化不走onblur和onfocus，不能删除
@@ -124,7 +132,7 @@ function drawMenu() {
 
     version = new createjs.Text(versionText, "bold " + menuItemTextSize / 2 + "px 楷体", menuItemTextColor);
     version.x = 0;
-    version.y = canvasH - menuItemTextSize / 2;
+    version.y = canvasH - menuItemTextSize;
     stage.addChild(version);
     stage.update();
 }
@@ -741,9 +749,16 @@ function tick(event) {
                 kanas.splice(i, 1);
                 missNum++;
                 miss.text = missText + missNum;
+                currentComboNum = 0;
+                currentCombo.text = currentComboText + currentComboNum;
+                resetHitRate();
+
             }
         }
     }
+
+    passTimeNum = Math.floor(createjs.Ticker.getTime(true) / 1000);
+    passTime.text = passTimeText + passTimeNum + passTimeText2;
 
     //    kanas.forEach(function (value, index, ar) {
     //        var k = value;
@@ -755,6 +770,11 @@ function tick(event) {
 
     //    console.log("y " + date.getTime());
     stage.update();
+}
+
+function resetHitRate() {
+    hitRateNum = (greatNum / (greatNum + missNum) * 100).toFixed(2) + "%";
+    hitRate.text = hitRateText + hitRateNum;
 }
 
 function drawGameResult(result) {
@@ -802,6 +822,7 @@ function loadProgress() {
 var backFontSize;
 var backFontColor = "black";
 var backButtonWidth, backButtonHeight;
+var backButton;
 
 function addBackButton(clickfunction) {
     backFontSize = canvasH > canvasW ? canvasW / 30 : canvasH / 30;
@@ -817,7 +838,7 @@ function addBackButton(clickfunction) {
     backShape.graphics.beginFill("#f63990").drawRoundRect(0, 0, backButtonWidth, backButtonHeight, backButtonHeight / 4);
     backShape.shadow = new createjs.Shadow("#454", 0, 5, 4);
 
-    var backButton = new createjs.Container();
+    backButton = new createjs.Container();
     backButton.addChild(backShape);
     backButton.addChild(backText);
     backButton.x = canvasW - backButtonWidth * 1.5;
@@ -876,7 +897,7 @@ function checkGameEnd() {
 
 function checkGameSuccess() {
 
-    if (currentGame.rules[2] != -1) {//&&currentGame.rules[2]<combo
+    if (currentGame.rules[2] != -1 && currentGame.rules[2] > maxCombo) {//&&currentGame.rules[2]<combo
         return false;
     }
 
@@ -927,6 +948,9 @@ window.onresize = function () {
         break;
     case freedomScreen:
         drawFreedom();
+        break;
+    case levelsScreen:
+        drawLevels();
         break;
     }
     stage.update();
@@ -1428,20 +1452,20 @@ function initData() {
     levelGames = new Array();
 
     //1
-    //var level = new Game();
-    //level.speed = 8;
-    //level.appearTime = 4000;
-    //level.dataArea = [true, false, false, false, false, false];
-    //level.rules = [-1, 10, -1, 5, -1, -1, -1];
-    //level.level = 0;
-    //levelGames.push(level);
     var level = new Game();
     level.speed = 8;
     level.appearTime = 4000;
     level.dataArea = [true, false, false, false, false, false];
-    level.rules = [-1, 1, -1, 5, -1, -1, -1];
+    level.rules = [-1, 10, -1, 5, -1, -1, -1];
     level.level = 0;
     levelGames.push(level);
+    //var level = new Game();
+    //level.speed = 8;
+    //level.appearTime = 4000;
+    //level.dataArea = [true, false, false, false, false, false];
+    //level.rules = [-1, 1, -1, 5, -1, -1, -1];
+    //level.level = 0;
+    //levelGames.push(level);
 
     level = new Game();
     level.speed = 5;
@@ -1463,7 +1487,7 @@ function initData() {
     level.speed = 5;
     level.appearTime = 2000;
     level.dataArea = [true, false, false, false, false, false];
-    level.rules = [2, -1, -1, -1, -1, -1, 100];
+    level.rules = [2, -1, 10, -1, -1, -1, -1];
     level.level = 3;
     levelGames.push(level);
 
@@ -1471,386 +1495,386 @@ function initData() {
     level.speed = 4;
     level.appearTime = 2000;
     level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
+    level.rules = [2, -1, -1, -1, -1, -1, 90];
     level.level = 4;
     levelGames.push(level);
 
     //6
     level = new Game();
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [false, true, false, false, false, false];
+    level.rules = [-1, 20, -1, 5, -1, -1, -1];
+    level.level = 5;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
+    level.appearTime = 2000;
+    level.dataArea = [false, true, false, false, false, false];
+    level.rules = [1, -1, -1, 3, -1, -1, -1];
+    level.level = 6;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
+    level.appearTime = 2000;
+    level.dataArea = [false, true, false, false, false, false];
+    level.rules = [1, -1, -1, -1, -1, -1, 70];
+    level.level = 7;
+    levelGames.push(level);
+
+    level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, true, false, false, false, false];
+    level.rules = [-1, 20, -1, 5, -1, -1, -1];
+    level.level = 8;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
     level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.rules = [2, -1, -1, -1, -1, -1, 90];
+    level.level = 9;
     levelGames.push(level);
 
     //11
     level = new Game();
-    level.speed = 4;
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [false, false, true, false, false, false];
+    level.rules = [-1, 20, -1, 5, -1, -1, -1];
+    level.level = 10;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [false, false, true, false, false, false];
+    level.rules = [1, -1, -1, 5, -1, -1, -1];
+    level.level = 11;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, true, false, false, false];
+    level.rules = [1, -1, -1, -1, -1, -1, 80];
+    level.level = 12;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, true, false, false, false];
+    level.rules = [2, -1, 10, -1, -1, -1, -1];
+    level.level = 13;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, true, false, false, false];
+    level.rules = [2, -1, -1, -1, -1, -1, 90];
+    level.level = 14;
     levelGames.push(level);
 
     //16
     level = new Game();
-    level.speed = 4;
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [false, false, false, true, false, false];
+    level.rules = [-1, 20, -1, 5, -1, -1, 100];
+    level.level = 15;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [false, false, false, true, false, false];
+    level.rules = [1, -1, -1, 5, -1, -1, 100];
+    level.level = 16;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, false, true, false, false];
+    level.rules = [1, -1, -1, -1, -1, -1, 80];
+    level.level = 17;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, false, true, false, false];
+    level.rules = [2, -1, 10, -1, -1, -1, -1];
+    level.level = 18;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, false, true, false, false];
+    level.rules = [2, -1, -1, -1, -1, -1, 90];
+    level.level = 19;
     levelGames.push(level);
 
     //21
     level = new Game();
-    level.speed = 4;
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [false, false, false, false, true, false];
+    level.rules = [-1, 20, -1, 5, -1, -1, -1];
+    level.level = 20;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [false, false, false, false, true, false];
+    level.rules = [1, -1, -1, -1, -1, -1, 70];
+    level.level = 21;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, false, false, true, false];
+    level.rules = [1, -1, -1, -1, -1, -1, 70];
+    level.level = 22;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, false, false, true, false];
+    level.rules = [2, -1, 10, -1, -1, -1, -1];
+    level.level = 23;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, false, false, true, false];
+    level.rules = [2, -1, -1, -1, -1, -1, 90];
+    level.level = 24;
     levelGames.push(level);
 
     //26
     level = new Game();
-    level.speed = 4;
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [false, false, false, false, false, true];
+    level.rules = [-1, 20, -1, 5, -1, -1, -1];
+    level.level = 25;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [false, false, false, false, false, true];
+    level.rules = [2, -1, 10, -1, -1, -1, -1];
+    level.level = 26;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, false, false, false, true];
+    level.rules = [1, -1, -1, -1, -1, -1, 70];
+    level.level = 27;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, false, false, false, true];
+    level.rules = [2, -1, -1, 5, -1, -1, -1];
+    level.level = 28;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, false, false, false, true];
+    level.rules = [2, -1, -1, -1, -1, -1, 90];
+    level.level = 29;
     levelGames.push(level);
 
     //31
     level = new Game();
-    level.speed = 4;
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [true, true, false, false, false, false];
+    level.rules = [-1, 20, -1, 5, -1, -1, -1];
+    level.level = 30;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [true, true, false, false, false, false];
+    level.rules = [1, -1, -1, -1, -1, -1, 70];
+    level.level = 31;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [true, true, false, false, false, false];
+    level.rules = [2, -1, -1, 5, -1, -1, -1];
+    level.level = 32;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [true, true, false, false, false, false];
+    level.rules = [2, -1, 10, -1, -1, -1, -1];
+    level.level = 33;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [true, true, false, false, false, false];
+    level.rules = [2, -1, -1, -1, -1, -1, 90];
+    level.level = 34;
     levelGames.push(level);
 
     //36
     level = new Game();
-    level.speed = 4;
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [false, false, true, true, false, false];
+    level.rules = [-1, 20, -1, 5, -1, -1, -1];
+    level.level = 35;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [false, false, true, true, false, false];
+    level.rules = [1, -1, -1, -1, -1, -1, 70];
+    level.level = 36;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, true, true, false, false];
+    level.rules = [2, -1, 10, -1, -1, -1, -1];
+    level.level = 37;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, true, true, false, false];
+    level.rules = [2, -1, -1, 5, -1, -1, -1];
+    level.level = 38;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, true, true, false, false];
+    level.rules = [2, -1, -1, -1, -1, -1, 90];
+    level.level = 39;
     levelGames.push(level);
 
     //41
     level = new Game();
-    level.speed = 4;
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [false, false, false, false, true, true];
+    level.rules = [-1, 20, -1, 5, -1, -1, -1];
+    level.level = 40;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [false, false, false, false, true, true];
+    level.rules = [1, -1, -1, 5, -1, -1, -1];
+    level.level = 41;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, false, false, true, true];
+    level.rules = [2, -1, -1, -1, -1, -1, 70];
+    level.level = 42;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, false, false, true, true];
+    level.rules = [2, -1, 10, -1, -1, -1, -1];
+    level.level = 43;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [false, false, false, false, true, true];
+    level.rules = [2, -1, -1, -1, -1, -1, 90];
+    level.level = 44;
     levelGames.push(level);
 
     //46
     level = new Game();
-    level.speed = 4;
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [true, true, true, true, true, true];
+    level.rules = [-1, 20, -1, 5, -1, -1, -1];
+    level.level = 45;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
+    level.appearTime = 3000;
+    level.dataArea = [true, true, true, true, true, true];
+    level.rules = [1, -1, -1, -1, -1, -1, 70];
+    level.level = 46;
+    levelGames.push(level);
+
+    level = new Game();
+    level.speed = 5;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [true, true, true, true, true, true];
+    level.rules = [2, -1, 10, -1, -1, -1, -1];
+    level.level = 47;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [true, true, true, true, true, true];
+    level.rules = [2, -1, -1, 5, -1, -1, -1];
+    level.level = 48;
     levelGames.push(level);
 
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
-    levelGames.push(level);
-
-    level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.dataArea = [true, true, true, true, true, true];
+    level.rules = [2, -1, -1, -1, -1, -1, 90];
+    level.level = 49;
     levelGames.push(level);
 
     //51
     level = new Game();
-    level.speed = 4;
-    level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
-    level.rules = [5, -1, -1, -1, -1, -1, 100];
-    level.level = 5;
+    level.speed = 3;
+    level.appearTime = 1500;
+    level.dataArea = [true, true, true, true, true, true];
+    level.rules = [10, -1, -1, -1, -1, -1, 100];
+    level.level = 50;
     levelGames.push(level);
 
 }
@@ -1862,18 +1886,38 @@ function initData() {
 function initText() {
     key = new createjs.Text(keyText, "bold " + keyTextSize + "px Arial", "#000000");
     key.x = keyX;
-    key.y = canvasH - keyTextSize;
+    key.y = canvasH - keyTextSize * 4.5;
     stage.addChild(key);
 
     great = new createjs.Text(greatText + greatNum, "bold " + keyTextSize + "px Arial", "#000000");
     great.x = greatX;
-    great.y = canvasH - keyTextSize;
+    great.y = canvasH - keyTextSize * 1.5;
     stage.addChild(great);
 
     miss = new createjs.Text(missText + missNum, "bold " + keyTextSize + "px Arial", "#000000");
     miss.x = missX;
-    miss.y = canvasH - keyTextSize;
+    miss.y = canvasH - keyTextSize * 1.5;
     stage.addChild(miss);
+
+    maxCombo = new createjs.Text(maxComboText + maxComboNum, "bold " + keyTextSize + "px Arial", "#000000");
+    maxCombo.x = maxComboX;
+    maxCombo.y = canvasH - keyTextSize * 3;
+    stage.addChild(maxCombo);
+
+    currentCombo = new createjs.Text(currentComboText + currentComboNum, "bold " + keyTextSize + "px Arial", "#000000");
+    currentCombo.x = currentComboX;
+    currentCombo.y = canvasH - keyTextSize * 3;
+    stage.addChild(currentCombo);
+
+    hitRate = new createjs.Text(hitRateText + (hitRateNum * 100).toFixed(2) + "%", "bold " + keyTextSize + "px Arial", "#000000");
+    hitRate.x = hitRateX;
+    hitRate.y = canvasH - keyTextSize * 1.5;
+    stage.addChild(hitRate);
+
+    passTime = new createjs.Text(passTimeText + passTimeNum + passTimeText2, "bold " + keyTextSize + "px Arial", "#000000");
+    passTime.x = passTimeX;
+    passTime.y = canvasH - keyTextSize * 4.5;
+    stage.addChild(passTime);
 
     addBackButton(function () {
         initTicker();
@@ -1888,15 +1932,47 @@ function initInGameData() {
     keycodes = [-1, -1, -1];
     greatNum = 0;
     missNum = 0;
+    maxComboNum = 0;
+    currentComboNum = 0;
+    hitRateNum = 0;
 }
 
 function resetTexts() {
-    key.y = canvasH - keyTextSize;
-    great.y = canvasH - keyTextSize;
-    miss.y = canvasH - keyTextSize;
+    key.y = canvasH - keyTextSize * 4.5;
+    great.y = canvasH - keyTextSize * 1.5;
+    miss.y = canvasH - keyTextSize * 1.5;
+    maxCombo.y = canvasH - keyTextSize * 3;
+    currentCombo.y = canvasH - keyTextSize * 3;
+    hitRate.y = canvasH - keyTextSize * 1.5;
+    passTime.y = canvasH - keyTextSize * 4.5;
+
     for (var i = 0; i < kanas.length; i++) {
         kanas[i].getInstance().getChildAt(0).font = "bold " + kana_d + "px Arial";
     }
+
+    backFontSize = canvasH > canvasW ? canvasW / 30 : canvasH / 30;
+
+    backButtonWidth = backFontSize * 4;
+    backButtonHeight = backFontSize * 2;
+
+    //var backText = new createjs.Text(backWord, "bold " + backFontSize + "px 楷体", backFontColor);
+    //backText.x = (backButtonWidth - backWord.length * backFontSize) / 2;// freedomItemTextSize * 0.25;
+    //backText.y = (backButtonHeight - backFontSize) / 2;//freedomItemTextSize * 0.25;
+    //
+    //var backShape = new createjs.Shape();
+    //backShape.graphics.beginFill("#f63990").drawRoundRect(0, 0, backButtonWidth, backButtonHeight, backButtonHeight / 4);
+    //backShape.shadow = new createjs.Shadow("#454", 0, 5, 4);
+    //
+    //backButton = new createjs.Container();
+    //backButton.addChild(backShape);
+    //backButton.addChild(backText);
+    //backButton.x = canvasW - backButtonWidth * 1.5;
+    //backButton.y = canvasH - backButtonHeight * 1.5;
+    //stage.getChildAt(backButton).x = canvasW - backButtonWidth * 1.5;
+    //stage.getChildAt(backButton).y= canvasH - backButtonHeight * 1.5;
+    backButton.x = canvasW - backButtonWidth * 1.5;
+    backButton.y = canvasH - backButtonHeight * 1.5;
+    //backButton.y = canvasH - backButtonHeight * 1.5;
 }
 
 function addMapToChooseMap(map) {
@@ -1975,15 +2051,6 @@ var appearTime = 3000;//ms
 var currentDate = 0, lastDate = 0;
 var state, menuScreen = 0, inGameScreen = 1, levelsScreen = 2, freedomScreen = 3, setScreen = 4, aboutScreen = 5, readyScreen = 6;
 
-var keycodes;
-var key;
-var keyText = "key:";
-var keyTextSize = 16;
-var great, miss;
-var greatText = "hit:", missText = "miss:";
-var keyX = 0, greatX = 80, missX = 140;
-var greatNum = 0, missNum = 0;
-
 var hiraganaMap, hiragana;
 var chooseMap, chooseKana;
 var katakanaMap, katakana;
@@ -2025,3 +2092,18 @@ var readyNumColor = "#000000";
 var readyRandom;
 var readyGoWord = "开始";
 var readyListener;
+
+//ingameScreen
+var keycodes;
+var key;
+var keyText = "键:";
+var keyTextSize = 16;
+var great, miss;
+var greatText = "命中:", missText = "漏掉:";
+var keyX = 0, greatX = 0, missX = 70;
+var greatNum = 0, missNum = 0;
+var maxCombo, maxComboText = "最大连击:", maxComboNum = 0;
+var currentCombo, currentComboText = "当前连击:", currentComboNum = 0;
+var hitRate, hitRateText = "命中率:", hitRateNum = 0;
+var maxComboX = 0, currentComboX = 100, hitRateX = 140;
+var passTime, passTimeText = "时间:", passTimeText2 = "s", passTimeNum = 0, passTimeX = 80;
