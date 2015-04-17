@@ -11,10 +11,29 @@ function init() {
 
 function addWindowListeners() {
     window.addEventListener("keydown", function (event) {
+        event = event || window.event;
+        if (state == levelsScreen) {
+            cheatCodeArray.push(event.keyCode);
+            console.log(event.keyCode);
+            if (cheatCodeArray.length >= cheatCodes.length) {
+                for (var i = cheatCodeArray.length - cheatCodes.length, j = 0; i < cheatCodeArray.length; i++, j++) {
+                    console.log("cheatCodes " + cheatCodes[j]);
+                    if (cheatCodeArray[i] != cheatCodes[j]) {
+                        return;
+                    }
+                }
+
+                console.log("cheat mode on");
+                cheatMode = true;
+                levelProgress = loadProgress();
+                drawLevels();
+                stage.update();
+            }
+        }
         if (state != inGameScreen) {
             return;
         }
-        event = event || window.event;
+
         for (var i = keycodes.length - 1; i > 0; i--) {
             keycodes[i] = keycodes[i - 1];
         }
@@ -110,6 +129,7 @@ function drawMenu() {
                 switch (num) {
                 case 0:
                     state = levelsScreen;
+                    cheatCodeArray = new Array();
                     drawLevels();
                     break;
                 case 1:
@@ -780,7 +800,7 @@ function resetHitRate() {
 function drawGameResult(result) {
     console.log("game result " + result);
 
-    if (result && currentGame.level == levelProgress && levelProgress < levelGames.length) {
+    if (result && currentGame.level == levelProgress && levelProgress < levelGames.length - 1) {
         levelProgress++;
         saveProgress();
     }
@@ -806,6 +826,10 @@ function saveProgress() {
 function loadProgress() {
     if (localStorage.progress == undefined) {
         localStorage.progress = 0;
+    }
+
+    if (cheatMode) {
+        return levelGames.length - 1;
     }
     return localStorage.progress;
     //return 34;
@@ -865,6 +889,7 @@ function resultTick(event) {
             drawMenu();
         } else {
             state = levelsScreen;
+            cheatCodeArray = new Array();
             drawLevels();
         }
     }
@@ -1535,7 +1560,7 @@ function initData() {
     level = new Game();
     level.speed = 4;
     level.appearTime = 2000;
-    level.dataArea = [true, false, false, false, false, false];
+    level.dataArea = [false, true, false, false, false, false];
     level.rules = [2, -1, -1, -1, -1, -1, 90];
     level.level = 9;
     levelGames.push(level);
@@ -1923,6 +1948,7 @@ function initText() {
         initTicker();
 
         state = levelsScreen;
+        cheatCodeArray = new Array();
         drawLevels();
     });
 }
@@ -2107,3 +2133,8 @@ var currentCombo, currentComboText = "当前连击:", currentComboNum = 0;
 var hitRate, hitRateText = "命中率:", hitRateNum = 0;
 var maxComboX = 0, currentComboX = 100, hitRateX = 140;
 var passTime, passTimeText = "时间:", passTimeText2 = "s", passTimeNum = 0, passTimeX = 80;
+
+//levelsScreen
+var cheatCodes = [38, 38, 40, 40, 37, 39, 37, 39, 65, 66, 66, 65];//上上下下左右左右abba
+var cheatMode = false;
+var cheatCodeArray;
